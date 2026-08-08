@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import { rawTokens } from '@tetherto/pearpass-lib-ui-kit'
-import { OtpRefreshProvider } from '@tetherto/pearpass-lib-vault'
+import { OtpRefreshProvider, useVault } from '@tetherto/pearpass-lib-vault'
 import { View } from 'react-native'
 import Toast from 'react-native-toast-message'
 
@@ -11,7 +11,9 @@ import { useRedirect } from './hooks/useRedirect'
 import { ToastCard } from '../../components/ToastCard'
 import { UpdateModalContent } from '../../containers/Modal/UpdateModalContent'
 import { useBottomSheet } from '../../context/BottomSheetContext'
+import { useGlobalLoading } from '../../context/LoadingContext'
 import { useVaultAccessRevoked } from '../../hooks/useVaultAccessRevoked'
+import { useVaultSchemaBoot } from '../../hooks/useVaultSchemaBoot'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
 
 export const App = () => {
@@ -28,6 +30,11 @@ export const App = () => {
   }, [needsUpdate])
 
   useVaultAccessRevoked()
+  const { isMigrationReady } = useVaultSchemaBoot()
+  const { data: activeVault } = useVault()
+  useGlobalLoading({
+    isLoading: Boolean(activeVault?.id) && !isMigrationReady
+  })
 
   const { initialRouteName, isLoading } = useRedirect()
 

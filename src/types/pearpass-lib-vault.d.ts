@@ -14,6 +14,28 @@ declare module '@tetherto/pearpass-lib-vault' {
     readonly PASS_PHRASE: 'passPhrase'
   }
 
+  export const SCHEMA_V2: 2
+  export const DEFAULT_URI_MATCH: string
+  export const VAULT_EXT_KEY: string
+  export const RECORD_V1_PREFIX: string
+  export const RECORD_V2_PREFIX: string
+
+  export function deriveUrisFromWebsites(
+    websites: string[] | undefined,
+    existingUris?: Array<{ uri?: string; match?: string }>
+  ): Array<{ uri: string; match: string }>
+
+  export function deriveWebsitesFromUris(
+    uris: Array<{ uri?: string }> | undefined,
+    fallbackWebsites?: string[]
+  ): string[]
+
+  export function emitSchemaMigrationWarning(payload?: {
+    vaultId?: string
+  }): Promise<void>
+
+  export function setBlockV1DeleteMirror(blocked: boolean): Promise<void>
+
   export const OTP_TYPE: {
     readonly TOTP: 'TOTP'
     readonly HOTP: 'HOTP'

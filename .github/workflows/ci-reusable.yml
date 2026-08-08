@@ -31,19 +31,25 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
-          cache: npm
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.10.0 --activate
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
+        env:
+          NPM_CONFIG_LEGACY_PEER_DEPS: true
 
       - name: Compile locale files
-        run: npm run lingui:compile
+        run: pnpm run lingui:compile
 
       - name: Run ESLint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Run TypeScript typecheck
-        run: npm run typecheck
+        run: pnpm run typecheck
 
       - name: Run tests
-        run: npm test
+        run: pnpm test

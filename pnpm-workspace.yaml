@@ -1,0 +1,18 @@
+# Single-package workspace (pnpm v11 project settings).
+strictPeerDependencies: false
+autoInstallPeers: true
+nodeLinker: hoisted
+blockExoticSubdeps: false
+publicHoistPattern:
+  - '*react-native*'
+  - '*expo*'
+
+allowBuilds:
+  '@sentry/cli': set this to true or false
+  "@tetherto/pearpass-lib-vault-core@file:../pearpass-lib-vault-core": true
+  "@tetherto/pearpass-lib-vault@file:../pearpass-lib-vault": true
+  esbuild: set this to true or false
+  unrs-resolver: set this to true or false
+  "@sentry/cli@3.4.0": true
+  "esbuild@0.25.12": true
+  "unrs-resolver@1.12.2": true

@@ -6,6 +6,7 @@ import { AUTHENTICATOR_ENABLED } from '@tetherto/pearpass-lib-constants'
 import { Add, Close, SyncLock, TrashOutlined } from '@tetherto/pearpass-lib-ui-kit/icons'
 import {
   RECORD_TYPES,
+  deriveUrisFromWebsites,
   useCreateRecord,
   useRecords,
   validateOtpInput
@@ -209,6 +210,19 @@ export const CreateOrEditLoginContent = ({
 
     const otpInput = values.otpSecret?.trim() || undefined
 
+    // TODO(dual-store): bind per-URI `match` (baseDomain/host/exact/…) in the
+    // form when SelectField layout is ready. Until then, derive uris with
+    // default match from websites (lib-vault also derives if uris omitted).
+    const websites = values.websites
+      .map((item) => {
+        const website = item.website?.trim()
+
+        if (website?.length) {
+          return addHttps(website)
+        }
+      })
+      .filter((website): website is string => !!website?.trim().length)
+
     const data = {
       type: RECORD_TYPES.LOGIN,
       folder: values.folder,
@@ -220,15 +234,12 @@ export const CreateOrEditLoginContent = ({
         password: values.password,
         note: values.note,
         otpInput,
-        websites: values.websites
-          .map((item) => {
-            const website = item.website?.trim()
-
-            if (website?.length) {
-              return addHttps(website)
-            }
-          })
-          .filter((website): website is string => !!website?.trim().length),
+        websites,
+        uris: deriveUrisFromWebsites(
+          websites,
+          (initialRecord?.data as { uris?: Array<{ uri?: string; match?: string }> })
+            ?.uris
+        ),
         customFields: (
           (values.customFields as Array<{ type: string; note?: string }>) ??
           []
