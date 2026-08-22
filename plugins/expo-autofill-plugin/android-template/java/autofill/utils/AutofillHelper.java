@@ -2,6 +2,8 @@ package com.pears.pass.autofill.utils;
 
 import android.app.assist.AssistStructure;
 import android.os.Build;
+import android.service.autofill.FillContext;
+import android.service.autofill.FillRequest;
 import android.text.InputType;
 import android.util.Pair;
 import android.view.ViewStructure;
@@ -11,6 +13,7 @@ import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class AutofillHelper {
@@ -101,6 +104,94 @@ public class AutofillHelper {
         public List<AutofillId> getFallbackFieldIds() {
             return fallbackFieldIds;
         }
+
+        /**
+         * Later FillContext wins when it actually has a value. Chrome often
+         * sends a focused-field-only structure after a complete one; keep IDs
+         * already found and overlay whatever the newer tree provides.
+         */
+        void mergeFrom(ParsedFields other) {
+            if (other == null) return;
+            if (other.usernameId != null) usernameId = other.usernameId;
+            if (other.passwordId != null) passwordId = other.passwordId;
+            if (other.otpId != null) otpId = other.otpId;
+            if (other.cardNumberId != null) cardNumberId = other.cardNumberId;
+            if (other.cardExpiryDateId != null) cardExpiryDateId = other.cardExpiryDateId;
+            if (other.cardExpiryMonthId != null) cardExpiryMonthId = other.cardExpiryMonthId;
+            if (other.cardExpiryYearId != null) cardExpiryYearId = other.cardExpiryYearId;
+            if (other.cardSecurityCodeId != null) cardSecurityCodeId = other.cardSecurityCodeId;
+            if (other.cardholderNameId != null) cardholderNameId = other.cardholderNameId;
+            if (other.packageName != null && !other.packageName.isEmpty()) {
+                packageName = other.packageName;
+            }
+            if (other.webDomain != null && !other.webDomain.isEmpty()) {
+                webDomain = other.webDomain;
+            }
+            for (AutofillId id : other.fallbackFieldIds) {
+                if (id != null && !fallbackFieldIds.contains(id)) {
+                    fallbackFieldIds.add(id);
+                }
+            }
+        }
+
+        void pruneSpecificIdsFromFallbacks() {
+            fallbackFieldIds.removeIf(id ->
+                    Objects.equals(id, usernameId)
+                            || Objects.equals(id, passwordId)
+                            || Objects.equals(id, otpId)
+                            || Objects.equals(id, cardNumberId)
+                            || Objects.equals(id, cardExpiryDateId)
+                            || Objects.equals(id, cardExpiryMonthId)
+                            || Objects.equals(id, cardExpiryYearId)
+                            || Objects.equals(id, cardSecurityCodeId)
+                            || Objects.equals(id, cardholderNameId));
+        }
+
+        public List<AutofillId> getFillTargetIds() {
+            List<AutofillId> ids = new ArrayList<>();
+            boolean hasSpecific = hasUsernameField() || hasPasswordField() || hasOtpField() || hasCardField();
+            if (hasSpecific) {
+                addIfNotNull(ids, usernameId);
+                addIfNotNull(ids, passwordId);
+                addIfNotNull(ids, otpId);
+                addIfNotNull(ids, cardNumberId);
+                addIfNotNull(ids, cardExpiryDateId);
+                addIfNotNull(ids, cardExpiryMonthId);
+                addIfNotNull(ids, cardExpiryYearId);
+                addIfNotNull(ids, cardSecurityCodeId);
+                addIfNotNull(ids, cardholderNameId);
+            } else {
+                ids.addAll(fallbackFieldIds);
+            }
+            return ids;
+        }
+    }
+
+    private static void addIfNotNull(List<AutofillId> ids, AutofillId id) {
+        if (id != null) ids.add(id);
+    }
+
+    /**
+     * Merge every FillContext. Using only the last tree misses username or
+     * password when a browser sends a focused-field stub after the full form.
+     */
+    public static ParsedFields parseFillRequest(FillRequest request) {
+        if (request == null) return null;
+        List<FillContext> contexts = request.getFillContexts();
+        if (contexts == null || contexts.isEmpty()) return null;
+
+        ParsedFields merged = new ParsedFields();
+        boolean parsedAny = false;
+        for (FillContext context : contexts) {
+            if (context == null) continue;
+            ParsedFields parsed = parseStructure(context.getStructure());
+            if (parsed == null) continue;
+            merged.mergeFrom(parsed);
+            parsedAny = true;
+        }
+        if (!parsedAny) return null;
+        merged.pruneSpecificIdsFromFallbacks();
+        return merged;
     }
 
     public static ParsedFields parseStructure(AssistStructure structure) {

@@ -1,16 +1,15 @@
 package com.pears.pass.autofill.service;
 
 import android.app.PendingIntent;
-import android.app.assist.AssistStructure;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.drawable.Icon;
+import android.net.Uri;
 import android.os.Build;
 import android.os.CancellationSignal;
 import android.service.autofill.AutofillService;
 import android.service.autofill.Dataset;
 import android.service.autofill.FillCallback;
-import android.service.autofill.FillContext;
 import android.service.autofill.FillRequest;
 import android.service.autofill.FillResponse;
 import android.service.autofill.InlinePresentation;
@@ -21,18 +20,17 @@ import android.view.autofill.AutofillValue;
 import android.widget.RemoteViews;
 import android.widget.inline.InlinePresentationSpec;
 
-// AndroidX Autofill imports
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.autofill.inline.UiVersions;
 import androidx.autofill.inline.v1.InlineSuggestionUi;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-
-import com.pears.pass.R;
 import com.pears.pass.autofill.ui.AuthenticationActivity;
-import com.pears.pass.autofill.utils.AutofillHelper;
 import com.pears.pass.autofill.utils.AutofillConstants;
+import com.pears.pass.autofill.utils.AutofillHelper;
+import com.pears.pass.autofill.utils.SecureLog;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -41,153 +39,155 @@ public class PearPassAutofillService extends AutofillService {
 
     @Override
     public void onFillRequest(@NonNull FillRequest request, @NonNull CancellationSignal cancellationSignal, @NonNull FillCallback callback) {
-        List<FillContext> fillContexts = request.getFillContexts();
-        if (fillContexts.isEmpty()) {
-            callback.onSuccess(null);
-            return;
-        }
-
-        AssistStructure structure = fillContexts.get(fillContexts.size() - 1).getStructure();
-        AutofillHelper.ParsedFields parsedFields = AutofillHelper.parseStructure(structure);
-
-        boolean hasSpecificFields = parsedFields != null
-                && (parsedFields.hasUsernameField() || parsedFields.hasPasswordField() || parsedFields.hasOtpField());
-        boolean hasCardFields = parsedFields != null && parsedFields.hasCardField();
-        boolean hasFallbackFields = parsedFields != null && parsedFields.hasAnyFallbackField();
-
-        if (!hasSpecificFields && !hasCardFields && !hasFallbackFields) {
-            callback.onSuccess(null);
-            return;
-        }
-
-        // Check if inline suggestions are available (Android 11+)
-        boolean hasInlineSuggestions = false;
-        List<InlinePresentationSpec> specs = null;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && request.getInlineSuggestionsRequest() != null) {
-            int maxSuggestionCount = request.getInlineSuggestionsRequest().getMaxSuggestionCount();
-            if (maxSuggestionCount > 0) {
-                specs = request.getInlineSuggestionsRequest().getInlinePresentationSpecs();
-                if (!specs.isEmpty()) {
-                    hasInlineSuggestions = true;
-                }
+        try {
+            AutofillHelper.ParsedFields parsedFields = AutofillHelper.parseFillRequest(request);
+            if (parsedFields == null) {
+                callback.onSuccess(null);
+                return;
             }
-        }
 
-        // Create authentication intent
-        Intent authIntent = new Intent(this, AuthenticationActivity.class);
-        authIntent.putExtra("username_id", parsedFields.getUsernameId());
-        authIntent.putExtra("password_id", parsedFields.getPasswordId());
-        authIntent.putExtra("otp_id", parsedFields.getOtpId());
-        authIntent.putExtra("card_number_id", parsedFields.getCardNumberId());
-        authIntent.putExtra("card_expiry_date_id", parsedFields.getCardExpiryDateId());
-        authIntent.putExtra("card_expiry_month_id", parsedFields.getCardExpiryMonthId());
-        authIntent.putExtra("card_expiry_year_id", parsedFields.getCardExpiryYearId());
-        authIntent.putExtra("card_security_code_id", parsedFields.getCardSecurityCodeId());
-        authIntent.putExtra("cardholder_name_id", parsedFields.getCardholderNameId());
+            boolean hasSpecificFields = parsedFields.hasUsernameField()
+                    || parsedFields.hasPasswordField()
+                    || parsedFields.hasOtpField();
+            boolean hasCardFields = parsedFields.hasCardField();
+            boolean hasFallbackFields = parsedFields.hasAnyFallbackField();
 
-        // Pass domain/package information for credential filtering
-        String webDomain = parsedFields.getWebDomain();
-        String packageName = parsedFields.getPackageName();
-
-        if (webDomain != null && !webDomain.isEmpty()) {
-            authIntent.putExtra("web_domain", webDomain);
-        }
-        if (packageName != null && !packageName.isEmpty()) {
-            authIntent.putExtra("package_name", packageName);
-        }
-
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            flags |= PendingIntent.FLAG_MUTABLE;
-        }
-
-        IntentSender sender = PendingIntent.getActivity(this, 1001, authIntent, flags).getIntentSender();
-
-        // Create RemoteViews for dropdown presentation (always needed)
-        RemoteViews presentation = new RemoteViews(getPackageName(), android.R.layout.simple_list_item_1);
-        presentation.setTextViewText(android.R.id.text1, "🔐 PearPass - Tap to unlock");
-
-        // Create inline presentation if available
-        InlinePresentation inlinePresentation = null;
-        if (hasInlineSuggestions) {
-            InlinePresentationSpec spec = specs.get(0);
-
-            // Check if inline suggestions are compatible
-            boolean isInlineCompatible = UiVersions.getVersions(spec.getStyle()).contains(UiVersions.INLINE_UI_VERSION_1);
-
-            if (isInlineCompatible) {
-                // Create PendingIntent for authentication
-                PendingIntent pendingIntent = PendingIntent.getActivity(this, 1002, authIntent, flags);
-
-                // Create icon
-                Icon icon = Icon.createWithResource(this, android.R.drawable.ic_dialog_info);
-
-                // Create InlineSuggestionUi slice
-                android.app.slice.Slice slice = InlineSuggestionUi.newContentBuilder(pendingIntent)
-                    .setTitle("🔐 PearPass")
-                    .setSubtitle("Tap to unlock")
-                    .setStartIcon(icon)
-                    .setContentDescription("PearPass autofill suggestion")
-                    .build()
-                    .getSlice();
-
-                inlinePresentation = new InlinePresentation(slice, spec, false);
+            if (!hasSpecificFields && !hasCardFields && !hasFallbackFields) {
+                callback.onSuccess(null);
+                return;
             }
-        }
 
-        FillResponse.Builder responseBuilder = new FillResponse.Builder();
-        Dataset.Builder datasetBuilder = new Dataset.Builder();
+            List<AutofillId> targetIds = parsedFields.getFillTargetIds();
+            if (targetIds.isEmpty()) {
+                callback.onSuccess(null);
+                return;
+            }
 
-        java.util.List<AutofillId> targetIds = new java.util.ArrayList<>();
-        if (parsedFields.hasUsernameField() || parsedFields.hasPasswordField() || parsedFields.hasOtpField() || hasCardFields) {
-            addIfNotNull(targetIds, parsedFields.getUsernameId());
-            addIfNotNull(targetIds, parsedFields.getPasswordId());
-            addIfNotNull(targetIds, parsedFields.getOtpId());
-            addIfNotNull(targetIds, parsedFields.getCardNumberId());
-            addIfNotNull(targetIds, parsedFields.getCardExpiryDateId());
-            addIfNotNull(targetIds, parsedFields.getCardExpiryMonthId());
-            addIfNotNull(targetIds, parsedFields.getCardExpiryYearId());
-            addIfNotNull(targetIds, parsedFields.getCardSecurityCodeId());
-            addIfNotNull(targetIds, parsedFields.getCardholderNameId());
-        } else if (hasFallbackFields) {
-            // Fallback: no specific fields detected, but editable text fields exist.
-            // Browsers sometimes leave the AssistStructure underpopulated on the first tap.
-            targetIds.addAll(parsedFields.getFallbackFieldIds());
-        }
+            Intent authIntent = new Intent(this, AuthenticationActivity.class);
+            putFieldExtras(authIntent, parsedFields);
 
-        if (!targetIds.isEmpty()) {
+            int requestCode = requestCodeFor(parsedFields);
+            authIntent.setData(Uri.parse("pearpass://autofill/" + requestCode));
+
+            int flags = PendingIntent.FLAG_CANCEL_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                flags |= PendingIntent.FLAG_MUTABLE;
+            }
+
+            IntentSender sender = PendingIntent.getActivity(this, requestCode, authIntent, flags).getIntentSender();
+
+            RemoteViews presentation = new RemoteViews(getPackageName(), android.R.layout.simple_list_item_1);
+            presentation.setTextViewText(android.R.id.text1, "PearPass — Unlock to fill");
+
+            InlinePresentation inlinePresentation = buildInlinePresentation(
+                    request, authIntent, requestCode, flags, hasSpecificFields || hasCardFields);
+
+            Dataset.Builder datasetBuilder = new Dataset.Builder();
             for (AutofillId targetId : targetIds) {
                 if (inlinePresentation != null) {
                     datasetBuilder.setValue(
-                        targetId,
-                        AutofillValue.forText(AutofillConstants.PLACEHOLDER_PASSWORD),
-                        presentation,
-                        inlinePresentation
+                            targetId,
+                            AutofillValue.forText(AutofillConstants.PLACEHOLDER_PASSWORD),
+                            presentation,
+                            inlinePresentation
                     );
                 } else {
                     datasetBuilder.setValue(
-                        targetId,
-                        AutofillValue.forText(AutofillConstants.PLACEHOLDER_PASSWORD),
-                        presentation
+                            targetId,
+                            AutofillValue.forText(AutofillConstants.PLACEHOLDER_PASSWORD),
+                            presentation
                     );
                 }
             }
             datasetBuilder.setAuthentication(sender);
-            responseBuilder.addDataset(datasetBuilder.build());
-        }
 
-        FillResponse response = responseBuilder.build();
-        callback.onSuccess(response);
+            FillResponse response = new FillResponse.Builder()
+                    .addDataset(datasetBuilder.build())
+                    .build();
+            callback.onSuccess(response);
+        } catch (Exception e) {
+            SecureLog.e(TAG, "onFillRequest failed", e);
+            try {
+                callback.onSuccess(null);
+            } catch (Exception ignored) {
+                // Callback may already have been invoked.
+            }
+        }
     }
 
-    private static void addIfNotNull(java.util.List<AutofillId> ids, AutofillId id) {
-        if (id != null) ids.add(id);
+    private static void putFieldExtras(Intent authIntent, AutofillHelper.ParsedFields parsedFields) {
+        authIntent.putExtra(AutofillConstants.EXTRA_USERNAME_ID, parsedFields.getUsernameId());
+        authIntent.putExtra(AutofillConstants.EXTRA_PASSWORD_ID, parsedFields.getPasswordId());
+        authIntent.putExtra(AutofillConstants.EXTRA_OTP_ID, parsedFields.getOtpId());
+        authIntent.putExtra(AutofillConstants.EXTRA_CARD_NUMBER_ID, parsedFields.getCardNumberId());
+        authIntent.putExtra(AutofillConstants.EXTRA_CARD_EXPIRY_DATE_ID, parsedFields.getCardExpiryDateId());
+        authIntent.putExtra(AutofillConstants.EXTRA_CARD_EXPIRY_MONTH_ID, parsedFields.getCardExpiryMonthId());
+        authIntent.putExtra(AutofillConstants.EXTRA_CARD_EXPIRY_YEAR_ID, parsedFields.getCardExpiryYearId());
+        authIntent.putExtra(AutofillConstants.EXTRA_CARD_SECURITY_CODE_ID, parsedFields.getCardSecurityCodeId());
+        authIntent.putExtra(AutofillConstants.EXTRA_CARDHOLDER_NAME_ID, parsedFields.getCardholderNameId());
+        authIntent.putParcelableArrayListExtra(
+                AutofillConstants.EXTRA_FALLBACK_IDS,
+                new ArrayList<>(parsedFields.getFallbackFieldIds())
+        );
+
+        String webDomain = parsedFields.getWebDomain();
+        String packageName = parsedFields.getPackageName();
+        if (webDomain != null && !webDomain.isEmpty()) {
+            authIntent.putExtra(AutofillConstants.EXTRA_WEB_DOMAIN, webDomain);
+        }
+        if (packageName != null && !packageName.isEmpty()) {
+            authIntent.putExtra(AutofillConstants.EXTRA_PACKAGE_NAME, packageName);
+        }
+    }
+
+    private static int requestCodeFor(AutofillHelper.ParsedFields fields) {
+        int hash = 17;
+        hash = 31 * hash + (fields.getUsernameId() != null ? fields.getUsernameId().hashCode() : 0);
+        hash = 31 * hash + (fields.getPasswordId() != null ? fields.getPasswordId().hashCode() : 0);
+        hash = 31 * hash + (fields.getOtpId() != null ? fields.getOtpId().hashCode() : 0);
+        hash = 31 * hash + (fields.getWebDomain() != null ? fields.getWebDomain().hashCode() : 0);
+        hash = 31 * hash + (fields.getPackageName() != null ? fields.getPackageName().hashCode() : 0);
+        if (hash == Integer.MIN_VALUE) return 1;
+        return Math.abs(hash);
+    }
+
+    private InlinePresentation buildInlinePresentation(
+            FillRequest request,
+            Intent authIntent,
+            int requestCode,
+            int flags,
+            boolean pinChip
+    ) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || request.getInlineSuggestionsRequest() == null) {
+            return null;
+        }
+        if (request.getInlineSuggestionsRequest().getMaxSuggestionCount() <= 0) {
+            return null;
+        }
+        List<InlinePresentationSpec> specs = request.getInlineSuggestionsRequest().getInlinePresentationSpecs();
+        if (specs == null || specs.isEmpty()) {
+            return null;
+        }
+
+        InlinePresentationSpec spec = specs.get(0);
+        if (!UiVersions.getVersions(spec.getStyle()).contains(UiVersions.INLINE_UI_VERSION_1)) {
+            return null;
+        }
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode + 1, authIntent, flags);
+        Icon icon = Icon.createWithResource(this, android.R.drawable.ic_lock_lock);
+        android.app.slice.Slice slice = InlineSuggestionUi.newContentBuilder(pendingIntent)
+                .setTitle("PearPass")
+                .setSubtitle("Unlock to fill")
+                .setStartIcon(icon)
+                .setContentDescription("PearPass autofill suggestion")
+                .build()
+                .getSlice();
+        return new InlinePresentation(slice, spec, pinChip);
     }
 
     @Override
     public void onSaveRequest(@NonNull SaveRequest request, @NonNull SaveCallback callback) {
-        // For now, we won't handle save requests
         callback.onSuccess();
     }
 

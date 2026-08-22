@@ -4,7 +4,20 @@
     android:settingsActivity=".MainActivity"
     android:supportsInlineSuggestions="true">
     <compatibility-package android:name="com.android.chrome" />
+    <compatibility-package android:name="com.chrome.beta" />
+    <compatibility-package android:name="com.chrome.dev" />
+    <compatibility-package android:name="com.chrome.canary" />
+    <compatibility-package android:name="com.google.android.apps.chrome" />
     <compatibility-package android:name="org.mozilla.firefox" />
+    <compatibility-package android:name="org.mozilla.firefox_beta" />
+    <compatibility-package android:name="org.mozilla.fenix" />
+    <compatibility-package android:name="org.mozilla.focus" />
+    <compatibility-package android:name="com.brave.browser" />
+    <compatibility-package android:name="com.duckduckgo.mobile.android" />
+    <compatibility-package android:name="com.sec.android.app.sbrowser" />
     <compatibility-package android:name="com.opera.browser" />
+    <compatibility-package android:name="com.opera.mini.native" />
     <compatibility-package android:name="com.microsoft.emmx" />
+    <compatibility-package android:name="com.vivaldi.browser" />
+    <compatibility-package android:name="com.kiwibrowser.browser" />
 </autofill-service>

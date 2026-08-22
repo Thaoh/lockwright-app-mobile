@@ -29,4 +29,17 @@ public final class AutofillConstants {
      * The autofill service class name as declared in AndroidManifest.xml
      */
     public static final String AUTOFILL_SERVICE_CLASS = ".autofill.service.PearPassAutofillService";
+
+    public static final String EXTRA_USERNAME_ID = "username_id";
+    public static final String EXTRA_PASSWORD_ID = "password_id";
+    public static final String EXTRA_OTP_ID = "otp_id";
+    public static final String EXTRA_CARD_NUMBER_ID = "card_number_id";
+    public static final String EXTRA_CARD_EXPIRY_DATE_ID = "card_expiry_date_id";
+    public static final String EXTRA_CARD_EXPIRY_MONTH_ID = "card_expiry_month_id";
+    public static final String EXTRA_CARD_EXPIRY_YEAR_ID = "card_expiry_year_id";
+    public static final String EXTRA_CARD_SECURITY_CODE_ID = "card_security_code_id";
+    public static final String EXTRA_CARDHOLDER_NAME_ID = "cardholder_name_id";
+    public static final String EXTRA_FALLBACK_IDS = "fallback_ids";
+    public static final String EXTRA_WEB_DOMAIN = "web_domain";
+    public static final String EXTRA_PACKAGE_NAME = "package_name";
 }

@@ -29,12 +29,15 @@ import com.pears.pass.autofill.crypto.PasskeyCrypto;
 import com.pears.pass.autofill.data.CredentialItem;
 import com.pears.pass.autofill.data.PasskeyCredential;
 import com.pears.pass.autofill.data.PearPassVaultClient;
+import com.pears.pass.autofill.utils.AutofillConstants;
 import com.pears.pass.autofill.utils.SecureLog;
 import com.pears.pass.autofill.utils.VaultInitializer;
 
 import org.json.JSONObject;
 
 import java.security.PrivateKey;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,6 +46,8 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
 
     private AutofillId usernameId;
     private AutofillId passwordId;
+    private AutofillId otpId;
+    private List<AutofillId> fallbackIds = new ArrayList<>();
     private AutofillId cardNumberId;
     private AutofillId cardExpiryDateId;
     private AutofillId cardExpiryMonthId;
@@ -90,19 +95,9 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
                 .commitNow();
         }
 
-        // Get autofill IDs and domain/package info from intent
-        Intent intent = getIntent();
-        usernameId = intent.getParcelableExtra("username_id");
-        passwordId = intent.getParcelableExtra("password_id");
-        cardNumberId = intent.getParcelableExtra("card_number_id");
-        cardExpiryDateId = intent.getParcelableExtra("card_expiry_date_id");
-        cardExpiryMonthId = intent.getParcelableExtra("card_expiry_month_id");
-        cardExpiryYearId = intent.getParcelableExtra("card_expiry_year_id");
-        cardSecurityCodeId = intent.getParcelableExtra("card_security_code_id");
-        cardholderNameId = intent.getParcelableExtra("cardholder_name_id");
-        webDomain = intent.getStringExtra("web_domain");
-        packageName = intent.getStringExtra("package_name");
+        readAutofillExtras(getIntent());
 
+        Intent intent = getIntent();
         // Check for passkey assertion mode
         isPasskeyAssertion = intent.getBooleanExtra("is_passkey_assertion", false);
 
@@ -155,6 +150,40 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
         }
 
         initialize();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        readAutofillExtras(intent);
+        Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (current instanceof CombinedItemsFragment) {
+            hasNavigated.set(false);
+            navigateToVaultSelection();
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private void readAutofillExtras(Intent intent) {
+        if (intent == null) return;
+        usernameId = intent.getParcelableExtra(AutofillConstants.EXTRA_USERNAME_ID);
+        passwordId = intent.getParcelableExtra(AutofillConstants.EXTRA_PASSWORD_ID);
+        otpId = intent.getParcelableExtra(AutofillConstants.EXTRA_OTP_ID);
+        cardNumberId = intent.getParcelableExtra(AutofillConstants.EXTRA_CARD_NUMBER_ID);
+        cardExpiryDateId = intent.getParcelableExtra(AutofillConstants.EXTRA_CARD_EXPIRY_DATE_ID);
+        cardExpiryMonthId = intent.getParcelableExtra(AutofillConstants.EXTRA_CARD_EXPIRY_MONTH_ID);
+        cardExpiryYearId = intent.getParcelableExtra(AutofillConstants.EXTRA_CARD_EXPIRY_YEAR_ID);
+        cardSecurityCodeId = intent.getParcelableExtra(AutofillConstants.EXTRA_CARD_SECURITY_CODE_ID);
+        cardholderNameId = intent.getParcelableExtra(AutofillConstants.EXTRA_CARDHOLDER_NAME_ID);
+        ArrayList<AutofillId> extrasFallbacks =
+                intent.getParcelableArrayListExtra(AutofillConstants.EXTRA_FALLBACK_IDS);
+        fallbackIds = extrasFallbacks != null ? extrasFallbacks : new ArrayList<>();
+        webDomain = intent.getStringExtra(AutofillConstants.EXTRA_WEB_DOMAIN);
+        packageName = intent.getStringExtra(AutofillConstants.EXTRA_PACKAGE_NAME);
+        if (otpId != null) {
+            SecureLog.d(TAG, "OTP field present");
+        }
     }
 
     @Override
@@ -242,28 +271,67 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
         if (credential.isCreditCard()) {
             applyCardValues(datasetBuilder, credential, presentation);
         } else {
-            if (usernameId != null) {
-                datasetBuilder.setValue(
-                    usernameId,
-                    AutofillValue.forText(credential.getUsername()),
-                    presentation
-                );
-            }
+            applyLoginValues(datasetBuilder, credential, presentation);
+        }
 
-            if (passwordId != null) {
-                datasetBuilder.setValue(
-                    passwordId,
-                    AutofillValue.forText(credential.getPassword()),
-                    presentation
-                );
-            }
+        Dataset dataset;
+        try {
+            dataset = datasetBuilder.build();
+        } catch (IllegalStateException e) {
+            SecureLog.e(TAG, "No autofill targets on credential select", e);
+            setResult(Activity.RESULT_CANCELED);
+            finish();
+            return;
         }
 
         Intent replyIntent = new Intent();
-        replyIntent.putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, datasetBuilder.build());
+        replyIntent.putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, dataset);
 
         setResult(Activity.RESULT_OK, replyIntent);
         finish();
+    }
+
+    private void applyLoginValues(
+            Dataset.Builder datasetBuilder,
+            CredentialItem credential,
+            RemoteViews presentation
+    ) {
+        boolean filledSpecific = false;
+        if (usernameId != null) {
+            datasetBuilder.setValue(
+                usernameId,
+                AutofillValue.forText(credential.getUsername()),
+                presentation
+            );
+            filledSpecific = true;
+        }
+
+        if (passwordId != null) {
+            datasetBuilder.setValue(
+                passwordId,
+                AutofillValue.forText(credential.getPassword()),
+                presentation
+            );
+            filledSpecific = true;
+        }
+
+        if (filledSpecific) return;
+
+        // AssistStructure was too sparse for classification (common on first
+        // keyboard focus). Fill username then password into leftover fields.
+        if (fallbackIds == null || fallbackIds.isEmpty()) return;
+        datasetBuilder.setValue(
+                fallbackIds.get(0),
+                AutofillValue.forText(credential.getUsername()),
+                presentation
+        );
+        if (fallbackIds.size() >= 2) {
+            datasetBuilder.setValue(
+                    fallbackIds.get(1),
+                    AutofillValue.forText(credential.getPassword()),
+                    presentation
+            );
+        }
     }
 
     private void applyCardValues(Dataset.Builder builder, CredentialItem credential, RemoteViews presentation) {
