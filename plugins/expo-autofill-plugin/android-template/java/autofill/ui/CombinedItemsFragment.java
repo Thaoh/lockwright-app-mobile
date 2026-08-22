@@ -39,6 +39,7 @@ import com.pears.pass.autofill.jobs.UpdatePasskeyPayload;
 import com.pears.pass.autofill.utils.AutofillConstants;
 import com.pears.pass.autofill.utils.SecureBufferUtils;
 import com.pears.pass.autofill.utils.SecureLog;
+import com.pears.pass.autofill.utils.UriMatchHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -403,7 +404,7 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
                     records = ((PasskeyRegistrationActivity) getActivity())
                             .loadV2RegistrationMatches().get();
                 } else {
-                    records = vaultClient.activeVaultList("record/").get();
+                    records = vaultClient.listCanonicalRecords().get();
                 }
                 List<CredentialItem> parsed = parseCredentials(records);
 
@@ -492,36 +493,46 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
         // In registration mode, prefer records matching rpId/userName; else fall through.
         if (MODE_REGISTRATION.equals(mode) && rpId != null && !rpId.isEmpty()) {
             List<CredentialItem> matches = new ArrayList<>();
-            String rp = rpId.toLowerCase(Locale.ROOT);
-            String un = userName != null ? userName.toLowerCase(Locale.ROOT) : "";
+            String pageUrl = UriMatchHelper.pageUrlFromWebDomain(rpId);
             for (CredentialItem c : all) {
-                if (c.getWebsites() != null) {
-                    for (String w : c.getWebsites()) {
-                        if (w != null && w.toLowerCase(Locale.ROOT).contains(rp)) {
-                            matches.add(c);
-                            break;
-                        }
-                    }
+                if (UriMatchHelper.recordMatchesPage(c.getWebsites(), c.getUris(), pageUrl)) {
+                    matches.add(c);
                 }
             }
             return matches.isEmpty() ? new ArrayList<>(all) : matches;
         }
-        // Autofill: domain/package filter
+        // Autofill: URI match types + specificity rank (extension parity)
         if (webDomain != null || packageName != null) {
             List<CredentialItem> matches = new ArrayList<>();
-            String target = webDomain != null ? extractDomain(webDomain) : null;
-            String pkgDomain = packageName != null ? convertPackageToDomain(packageName) : null;
+            String pageUrl = UriMatchHelper.pageUrlFromWebDomain(webDomain);
+            String pkgPageUrl = packageName != null
+                    ? UriMatchHelper.pageUrlFromWebDomain(convertPackageToDomain(packageName))
+                    : null;
             for (CredentialItem c : all) {
-                if (c.getWebsites() == null) continue;
-                for (String w : c.getWebsites()) {
-                    String d = extractDomain(w);
-                    if ((target != null && domainsMatch(target, d)) ||
-                        (pkgDomain != null && domainsMatch(pkgDomain, d))) {
-                        matches.add(c);
-                        break;
-                    }
+                int rank = 0;
+                if (pageUrl != null) {
+                    rank = Math.max(rank, UriMatchHelper.getRecordSiteMatchRank(
+                            c.getWebsites(), c.getUris(), pageUrl));
+                }
+                if (rank == 0 && pkgPageUrl != null) {
+                    rank = UriMatchHelper.getRecordSiteMatchRank(
+                            c.getWebsites(), c.getUris(), pkgPageUrl);
+                }
+                if (rank > 0) {
+                    matches.add(c);
                 }
             }
+            matches.sort((a, b) -> {
+                int rb = Math.max(
+                        pageUrl != null ? UriMatchHelper.getRecordSiteMatchRank(b.getWebsites(), b.getUris(), pageUrl) : 0,
+                        pkgPageUrl != null ? UriMatchHelper.getRecordSiteMatchRank(b.getWebsites(), b.getUris(), pkgPageUrl) : 0
+                );
+                int ra = Math.max(
+                        pageUrl != null ? UriMatchHelper.getRecordSiteMatchRank(a.getWebsites(), a.getUris(), pageUrl) : 0,
+                        pkgPageUrl != null ? UriMatchHelper.getRecordSiteMatchRank(a.getWebsites(), a.getUris(), pkgPageUrl) : 0
+                );
+                return Integer.compare(rb, ra);
+            });
             return matches.isEmpty() ? new ArrayList<>(all) : matches;
         }
         return new ArrayList<>(all);
@@ -686,13 +697,8 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
             String pwd = (String) data.get("password");
             if (pwd == null) pwd = "";
 
-            List<String> websites = new ArrayList<>();
-            Object websitesObj = data.get("websites");
-            if (websitesObj instanceof List) {
-                for (Object w : (List<?>) websitesObj) {
-                    if (w instanceof String) websites.add((String) w);
-                }
-            }
+            List<String> websites = UriMatchHelper.parseWebsites(data.get("websites"));
+            List<UriMatchHelper.UriEntry> uris = UriMatchHelper.parseUris(data.get("uris"));
 
             boolean hasPasskey = false;
             long passkeyCreatedAt = 0;
@@ -712,8 +718,10 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
                 if (ts instanceof Number) passkeyCreatedAt = ((Number) ts).longValue();
             }
 
-            credentials.add(new CredentialItem(id, name, uname, pwd, websites,
-                    hasPasskey, passkeyCreatedAt, credentialMap, privateKeyBuffer, userIdStr, credentialId));
+            CredentialItem item = new CredentialItem(id, name, uname, pwd, websites,
+                    hasPasskey, passkeyCreatedAt, credentialMap, privateKeyBuffer, userIdStr, credentialId);
+            item.setUris(uris);
+            credentials.add(item);
 
             rawRecordsById.put(id, record);
         }

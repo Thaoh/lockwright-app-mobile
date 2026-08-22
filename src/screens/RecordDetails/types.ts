@@ -39,6 +39,7 @@ export interface LoginData {
   password?: string
   note?: string
   websites?: string[]
+  uris?: Array<{ uri?: string; match?: string }>
   customFields?: CustomField[]
   attachments?: Attachment[]
   credential?: { id: string }

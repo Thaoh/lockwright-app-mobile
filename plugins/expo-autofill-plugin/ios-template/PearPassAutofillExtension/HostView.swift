@@ -964,7 +964,7 @@ struct HostView: View {
         if mode == .registration, let ctx = registrationContext {
             return try await client.searchLoginRecords(rpId: ctx.rpId, username: ctx.userName)
         }
-        return try await client.activeVaultList(filterKey: "record/")
+        return try await client.listCanonicalRecords()
     }
 
     /// Protected vaults: `getVaultById` (handles close internally).

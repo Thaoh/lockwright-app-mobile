@@ -6,7 +6,6 @@ import { AUTHENTICATOR_ENABLED } from '@tetherto/pearpass-lib-constants'
 import { Add, Close, SyncLock, TrashOutlined } from '@tetherto/pearpass-lib-ui-kit/icons'
 import {
   RECORD_TYPES,
-  deriveUrisFromWebsites,
   useCreateRecord,
   useRecords,
   validateOtpInput
@@ -36,7 +35,10 @@ import { formatPasskeyDate } from '../../utils/formatPasskeyDate'
 import { logger } from '../../utils/logger'
 import { getPasswordIndicatorVariant } from '../../utils/passwordPolicy'
 import { AttachmentFields } from '../../components/AttachmentFields'
+import { URI_MATCH_TYPES, type UriMatchType } from '../../utils/uriMatch/constants'
+import { buildLoginUris, websiteRowsFromRecord } from '../../utils/uriMatch'
 import { OtpSecretScanButton } from './OtpSecretScanButton'
+import { WebsiteUriMatchField } from './WebsiteUriMatchField'
 
 type LoginAttachment = {
   base64?: string
@@ -50,6 +52,7 @@ type UploadedLoginAttachment = LoginAttachment & {
 
 type WebsiteFormValue = {
   website?: string
+  matchType?: UriMatchType
 }
 
 type HiddenMessageField = {
@@ -66,6 +69,7 @@ type LoginRecord = {
     otp?: { secret?: string }
     note?: string
     websites?: string[]
+    uris?: Array<{ uri?: string; match?: string }>
     customFields?: HiddenMessageField[]
     credential?: { id?: string }
     passkeyCreatedAt?: string
@@ -148,7 +152,8 @@ export const CreateOrEditLoginContent = ({
     note: Validator.string(),
     websites: Validator.array().items(
       Validator.object({
-        website: Validator.string().website('Wrong format of website')
+        website: Validator.string().website('Wrong format of website'),
+        matchType: Validator.string()
       })
     ),
     customFields: Validator.array().items(
@@ -176,9 +181,7 @@ export const CreateOrEditLoginContent = ({
           initialRecord?.data?.otp?.secret ??
           '',
         note: initialRecord?.data?.note ?? '',
-        websites: initialRecord?.data?.websites?.length
-          ? initialRecord.data.websites.map((website) => ({ website }))
-          : [{ website: '' }],
+        websites: websiteRowsFromRecord(initialRecord),
         customFields: initialRecord?.data?.customFields?.length
           ? initialRecord.data.customFields
           : [{ type: 'note', note: '' }],
@@ -210,18 +213,15 @@ export const CreateOrEditLoginContent = ({
 
     const otpInput = values.otpSecret?.trim() || undefined
 
-    // TODO(dual-store): bind per-URI `match` (baseDomain/host/exact/…) in the
-    // form when SelectField layout is ready. Until then, derive uris with
-    // default match from websites (lib-vault also derives if uris omitted).
-    const websites = values.websites
-      .map((item) => {
-        const website = item.website?.trim()
+    const websiteRows = values.websites
+      .map((item) => ({
+        website: item.website?.trim() ?? '',
+        matchType: item.matchType
+      }))
+      .filter((item) => item.website.length > 0)
 
-        if (website?.length) {
-          return addHttps(website)
-        }
-      })
-      .filter((website): website is string => !!website?.trim().length)
+    const websites = websiteRows.map((item) => addHttps(item.website))
+    const uris = buildLoginUris(websiteRows)
 
     const data = {
       type: RECORD_TYPES.LOGIN,
@@ -235,11 +235,7 @@ export const CreateOrEditLoginContent = ({
         note: values.note,
         otpInput,
         websites,
-        uris: deriveUrisFromWebsites(
-          websites,
-          (initialRecord?.data as { uris?: Array<{ uri?: string; match?: string }> })
-            ?.uris
-        ),
+        uris,
         customFields: (
           (values.customFields as Array<{ type: string; note?: string }>) ??
           []
@@ -442,7 +438,9 @@ export const CreateOrEditLoginContent = ({
             <Button
               variant="tertiaryAccent"
               iconBefore={<Add />}
-              onClick={() => addItem({ website: '' })}
+              onClick={() =>
+                addItem({ website: '', matchType: URI_MATCH_TYPES.DOMAIN })
+              }
             >
               {t`Add Another Website`}
             </Button>
@@ -450,26 +448,20 @@ export const CreateOrEditLoginContent = ({
           errorMessage={(errors as Record<string, { error?: { website?: string } }[]>)?.websites?.find(Boolean)?.error?.website}
           testID="website-multi-slot-input"
         >
-          {websitesList.map((w, index) => (
-            <InputField
+          {websitesList.map((w: WebsiteFormValue, index: number) => (
+            <WebsiteUriMatchField
               key={index}
-              label={t`Website`}
-              value={w?.website ?? ''}
-              placeholder={t`Enter Website`}
-              onChangeText={(val) => setValue(`websites[${index}].website`, val)}
-              isGrouped
-              testID={`website-multi-slot-input-slot-${index}`}
-              rightSlot={
-                websitesList.length > 1 ? (
-                  <Button
-                    size="small"
-                    variant="tertiary"
-                    aria-label="Delete website"
-                    iconBefore={<TrashOutlined color={theme.colors.colorTextPrimary} />}
-                    onClick={() => removeItem(index)}
-                  />
-                ) : undefined
+              index={index}
+              website={w?.website ?? ''}
+              matchType={w?.matchType || URI_MATCH_TYPES.DOMAIN}
+              canRemove={websitesList.length > 1}
+              onWebsiteChange={(val) =>
+                setValue(`websites[${index}].website`, val)
               }
+              onMatchTypeChange={(val) =>
+                setValue(`websites[${index}].matchType`, val)
+              }
+              onRemove={() => removeItem(index)}
             />
           ))}
         </MultiSlotInput>

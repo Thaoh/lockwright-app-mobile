@@ -582,6 +582,14 @@ import Foundation
         log("Found \(records.count) records in active vault")
         return records
     }
+
+    /// Schema-2 canonical list. Falls back to v1 keys when the v2 namespace is empty.
+    func listCanonicalRecords() async throws -> [VaultRecord] {
+        let v2 = try await activeVaultList(filterKey: "record-v2/")
+        if !v2.isEmpty { return v2 }
+        log("record-v2/ empty; falling back to record/")
+        return try await activeVaultList(filterKey: "record/")
+    }
     
     /// Initialize active vault and fetch records for a specific vault
     /// This follows the RN app pattern for getting vault records
@@ -595,7 +603,7 @@ import Foundation
         _ = try await activeVaultInit(id: vault.id, encryptionKey: encryptionKey)
         
         // Step 3: Fetch records from the active vault
-        let records = try await activeVaultList(filterKey: "record/")
+        let records = try await listCanonicalRecords()
         
         log("Successfully fetched \(records.count) records from vault \(vault.name)")
         return records
@@ -1205,7 +1213,7 @@ import Foundation
     func searchLoginRecords(rpId: String, username: String) async throws -> [VaultRecord] {
         log("Searching login records for rpId: \(rpId), username: \(username)")
 
-        let allRecords = try await activeVaultList(filterKey: "record/")
+        let allRecords = try await listCanonicalRecords()
         var matches: [VaultRecord] = []
 
         for record in allRecords {
@@ -1243,7 +1251,7 @@ import Foundation
     func listAllLoginRecords() async throws -> [VaultRecord] {
         log("Listing all login records")
 
-        let allRecords = try await activeVaultList(filterKey: "record/")
+        let allRecords = try await listCanonicalRecords()
         let loginRecords = allRecords.filter { record in
             record.type == "login" && record.data != nil
         }
@@ -1265,7 +1273,7 @@ import Foundation
             return []
         }
 
-        let allRecords = try await activeVaultList(filterKey: "record/")
+        let allRecords = try await listCanonicalRecords()
         NSLog("[PearPassVaultClient] listFolders: got \(allRecords.count) total records")
 
         var folderNames: [String] = []
@@ -1473,7 +1481,7 @@ import Foundation
     func listPasskeys(rpId: String? = nil) async throws -> [PasskeyCredential] {
         log("Listing passkeys" + (rpId != nil ? " for RP: \(rpId!)" : ""))
 
-        let records = try await activeVaultList(filterKey: "record/")
+        let records = try await listCanonicalRecords()
         var passkeys: [PasskeyCredential] = []
 
         for record in records {

@@ -1,0 +1,266 @@
+package com.pears.pass.autofill.utils;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Bitwarden-style URI match for vault schema v2.
+ * Ports the mobile/extension JS matcher (domain / host / startsWith / exact).
+ */
+public final class UriMatchHelper {
+    public static final String MATCH_DOMAIN = "domain";
+    public static final String MATCH_HOST = "host";
+    public static final String MATCH_STARTS_WITH = "startsWith";
+    public static final String MATCH_EXACT = "exact";
+    public static final String VAULT_MATCH_BASE_DOMAIN = "baseDomain";
+
+    private UriMatchHelper() {}
+
+    public static final class UriEntry {
+        public final String uri;
+        public final String match;
+
+        public UriEntry(String uri, String match) {
+            this.uri = uri;
+            this.match = match;
+        }
+    }
+
+    public static List<UriEntry> parseUris(Object urisObj) {
+        List<UriEntry> out = new ArrayList<>();
+        if (!(urisObj instanceof List)) return out;
+        for (Object item : (List<?>) urisObj) {
+            if (!(item instanceof Map)) continue;
+            Map<?, ?> map = (Map<?, ?>) item;
+            Object uri = map.get("uri");
+            Object match = map.get("match");
+            if (uri instanceof String && !((String) uri).trim().isEmpty()) {
+                out.add(new UriEntry(
+                        (String) uri,
+                        match instanceof String ? (String) match : VAULT_MATCH_BASE_DOMAIN
+                ));
+            }
+        }
+        return out;
+    }
+
+    public static List<String> parseWebsites(Object websitesObj) {
+        List<String> out = new ArrayList<>();
+        if (!(websitesObj instanceof List)) return out;
+        for (Object w : (List<?>) websitesObj) {
+            if (w instanceof String && !((String) w).trim().isEmpty()) {
+                out.add((String) w);
+            }
+        }
+        return out;
+    }
+
+    public static String fromVaultUriMatch(String vaultMatch) {
+        if (VAULT_MATCH_BASE_DOMAIN.equals(vaultMatch)) return MATCH_DOMAIN;
+        if (MATCH_DOMAIN.equals(vaultMatch)
+                || MATCH_HOST.equals(vaultMatch)
+                || MATCH_STARTS_WITH.equals(vaultMatch)
+                || MATCH_EXACT.equals(vaultMatch)) {
+            return vaultMatch;
+        }
+        return MATCH_DOMAIN;
+    }
+
+    public static String normalizeUrl(String urlString) {
+        if (urlString == null) return null;
+        String trimmed = urlString.trim();
+        if (trimmed.isEmpty()) return null;
+        try {
+            String withProtocol = trimmed.matches("(?i)^https?://.*")
+                    ? trimmed
+                    : "https://" + trimmed;
+            URI uri = URI.create(withProtocol);
+            String protocol = uri.getScheme() == null ? "https" : uri.getScheme().toLowerCase(Locale.ROOT);
+            String hostname = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
+            if (hostname.isEmpty()) return null;
+            int port = uri.getPort();
+            String portPart = (port > 0 && port != 80 && port != 443) ? (":" + port) : "";
+            String path = uri.getRawPath() == null ? "" : uri.getRawPath();
+            if (path.endsWith("/") && path.length() > 1) {
+                path = path.substring(0, path.length() - 1);
+            }
+            if ("/".equals(path)) path = "";
+            return protocol + "://" + hostname + portPart + path;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static List<String> getRecordWebsiteValues(List<String> websites, List<UriEntry> uris) {
+        List<String> fromWebsites = new ArrayList<>();
+        if (websites != null) {
+            for (String website : websites) {
+                if (website != null && !website.trim().isEmpty()) {
+                    fromWebsites.add(website);
+                }
+            }
+        }
+        List<String> fromUris = new ArrayList<>();
+        if (uris != null) {
+            for (UriEntry entry : uris) {
+                if (entry != null && entry.uri != null && !entry.uri.trim().isEmpty()) {
+                    fromUris.add(entry.uri);
+                }
+            }
+        }
+        if (fromUris.isEmpty()) return fromWebsites;
+        if (fromWebsites.isEmpty()) return fromUris;
+
+        Set<String> seen = new LinkedHashSet<>();
+        List<String> merged = new ArrayList<>();
+        for (String website : fromWebsites) {
+            String key = normalizeUrl(website);
+            if (key == null) key = website.trim().toLowerCase(Locale.ROOT);
+            if (seen.add(key)) merged.add(website);
+        }
+        for (String website : fromUris) {
+            String key = normalizeUrl(website);
+            if (key == null) key = website.trim().toLowerCase(Locale.ROOT);
+            if (seen.add(key)) merged.add(website);
+        }
+        return merged;
+    }
+
+    public static String resolveMatchType(List<UriEntry> uris, String website) {
+        if (uris == null || website == null) return MATCH_DOMAIN;
+        String key = normalizeUrl(website);
+        if (key == null) key = website.trim().toLowerCase(Locale.ROOT);
+        for (UriEntry entry : uris) {
+            if (entry == null || entry.uri == null) continue;
+            String entryKey = normalizeUrl(entry.uri);
+            if (entryKey == null) entryKey = entry.uri.trim().toLowerCase(Locale.ROOT);
+            if (key.equals(entryKey)) {
+                return fromVaultUriMatch(entry.match);
+            }
+        }
+        return MATCH_DOMAIN;
+    }
+
+    public static boolean doesWebsiteMatchPage(String pageUrl, String website, String matchType) {
+        if (website == null || website.trim().isEmpty() || pageUrl == null) return false;
+        String type = fromVaultUriMatch(matchType);
+        switch (type) {
+            case MATCH_HOST:
+                return matchesHost(pageUrl, website);
+            case MATCH_STARTS_WITH:
+                return matchesStartsWith(pageUrl, website);
+            case MATCH_EXACT:
+                return matchesExact(pageUrl, website);
+            case MATCH_DOMAIN:
+            default:
+                return matchesDomain(pageUrl, website);
+        }
+    }
+
+    public static boolean recordMatchesPage(List<String> websites, List<UriEntry> uris, String pageUrl) {
+        if (pageUrl == null || pageUrl.trim().isEmpty()) return false;
+        List<String> values = getRecordWebsiteValues(websites, uris);
+        for (String website : values) {
+            String matchType = resolveMatchType(uris, website);
+            if (doesWebsiteMatchPage(pageUrl, website, matchType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static int getUriMatchSpecificityRank(String matchType) {
+        String type = fromVaultUriMatch(matchType);
+        switch (type) {
+            case MATCH_EXACT:
+                return 4;
+            case MATCH_STARTS_WITH:
+                return 3;
+            case MATCH_HOST:
+                return 2;
+            case MATCH_DOMAIN:
+                return 1;
+            default:
+                return 0;
+        }
+    }
+
+    public static int getRecordSiteMatchRank(List<String> websites, List<UriEntry> uris, String pageUrl) {
+        if (!recordMatchesPage(websites, uris, pageUrl)) return 0;
+        int best = 0;
+        for (String website : getRecordWebsiteValues(websites, uris)) {
+            String matchType = resolveMatchType(uris, website);
+            if (!doesWebsiteMatchPage(pageUrl, website, matchType)) continue;
+            int rank = getUriMatchSpecificityRank(matchType);
+            if (rank > best) best = rank;
+        }
+        return best;
+    }
+
+    public static String pageUrlFromWebDomain(String webDomain) {
+        if (webDomain == null || webDomain.trim().isEmpty()) return null;
+        String trimmed = webDomain.trim();
+        if (trimmed.matches("(?i)^https?://.*")) return trimmed;
+        return "https://" + trimmed;
+    }
+
+    private static boolean matchesDomain(String pageUrl, String website) {
+        String pageHost = hostname(pageUrl);
+        String recordHost = hostname(website);
+        if (pageHost == null || recordHost == null) return false;
+        if (pageHost.equals(recordHost)) return true;
+        return pageHost.endsWith("." + recordHost) || recordHost.endsWith("." + pageHost);
+    }
+
+    private static boolean matchesHost(String pageUrl, String website) {
+        String pageHost = hostWithPort(pageUrl);
+        String recordHost = hostWithPort(website);
+        if (pageHost == null || recordHost == null) return false;
+        return pageHost.equals(recordHost);
+    }
+
+    private static boolean matchesStartsWith(String pageUrl, String website) {
+        String pageNormalized = normalizeUrl(pageUrl);
+        String websiteNormalized = normalizeUrl(website);
+        if (pageNormalized == null || websiteNormalized == null) return false;
+        return pageNormalized.startsWith(websiteNormalized);
+    }
+
+    private static boolean matchesExact(String pageUrl, String website) {
+        String pageNormalized = normalizeUrl(pageUrl);
+        String websiteNormalized = normalizeUrl(website);
+        if (pageNormalized == null || websiteNormalized == null) return false;
+        return pageNormalized.equals(websiteNormalized);
+    }
+
+    private static String hostname(String value) {
+        String normalized = normalizeUrl(value);
+        if (normalized == null) return null;
+        try {
+            String host = URI.create(normalized).getHost();
+            return host == null ? null : host.toLowerCase(Locale.ROOT);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String hostWithPort(String value) {
+        String normalized = normalizeUrl(value);
+        if (normalized == null) return null;
+        try {
+            URI uri = URI.create(normalized);
+            String host = uri.getHost();
+            if (host == null || host.isEmpty()) return null;
+            int port = uri.getPort();
+            String portPart = (port > 0 && port != 80 && port != 443) ? (":" + port) : "";
+            return host.toLowerCase(Locale.ROOT) + portPart;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+}

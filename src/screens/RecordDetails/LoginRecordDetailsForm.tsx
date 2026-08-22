@@ -24,6 +24,7 @@ import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
 import { useGetMultipleFiles } from '../../hooks/useGetMultipleFiles'
 import { usePasswordChangeReminder } from '../../hooks/usePasswordChangeReminder'
 import { addHttps } from '../../utils/addHttps'
+import { getRecordWebsiteValues } from '../../utils/uriMatch'
 import { formatPasskeyDate } from '../../utils/formatPasskeyDate'
 import { getMimeType } from '../../utils/getMimeType'
 import { getRecordAttachments } from '../../utils/getRecordAttachments'
@@ -70,7 +71,7 @@ export const LoginRecordDetailsForm = ({
   const { copyToClipboard } = useCopyToClipboard()
   const { isPasswordChangeReminderEnabled } = usePasswordChangeReminder()
 
-  const websites = initialRecord?.data?.websites ?? []
+  const websites = getRecordWebsiteValues(initialRecord)
 
   const recordAttachments = useMemo(
     () => getRecordAttachments(initialRecord),

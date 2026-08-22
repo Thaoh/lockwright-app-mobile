@@ -16,8 +16,9 @@ import java.util.List;
 public class AutofillHelper {
     private static final String TAG = "AutofillHelper";
 
-    private static final String[] USERNAME_HINTS = {"email", "phone", "username", "user", "mobile", "login"};
+    private static final String[] USERNAME_HINTS = {"email", "phone", "username", "user", "mobile", "login", "tel"};
     private static final String[] PASSWORD_HINTS = {"password", "pswd", "pwd"};
+    private static final String[] OTP_HINTS = {"otp", "totp", "2fa", "mfa", "one-time", "onetime", "sms-code", "smscode", "verification", "one_time"};
     private static final String[] IGNORED_HINTS = {"search", "find", "recipient", "edit"};
 
     private static final String[] CARD_NUMBER_KEYWORDS = {"cardnumber", "ccnumber", "cc-number", "card-number", "creditcard"};
@@ -30,6 +31,7 @@ public class AutofillHelper {
     public static class ParsedFields {
         private AutofillId usernameId;
         private AutofillId passwordId;
+        private AutofillId otpId;
         private AutofillId cardNumberId;
         private AutofillId cardExpiryDateId;
         private AutofillId cardExpiryMonthId;
@@ -57,12 +59,20 @@ public class AutofillHelper {
                     || cardholderNameId != null;
         }
 
+        public boolean hasOtpField() {
+            return otpId != null;
+        }
+
         public AutofillId getUsernameId() {
             return usernameId;
         }
 
         public AutofillId getPasswordId() {
             return passwordId;
+        }
+
+        public AutofillId getOtpId() {
+            return otpId;
         }
 
         public AutofillId getCardNumberId() { return cardNumberId; }
@@ -148,6 +158,9 @@ public class AutofillHelper {
         } else if (autofillId != null && isCardholderNameField(autofillHints, node) && fields.cardholderNameId == null) {
             fields.cardholderNameId = autofillId;
             SecureLog.d(TAG, "Found cardholder name field");
+        } else if (autofillId != null && isOtpField(autofillHints, inputType, node) && fields.otpId == null) {
+            fields.otpId = autofillId;
+            SecureLog.d(TAG, "Found OTP field");
         } else if (autofillId != null && isUsernameField(autofillHints, inputType, node) && fields.usernameId == null) {
             fields.usernameId = autofillId;
             SecureLog.d(TAG, "Found username field");
@@ -199,9 +212,62 @@ public class AutofillHelper {
             return true;
         }
 
-        // Check inputType for web email variation
+        // Check inputType for web email variation, native email, and phone
         int variation = inputType & InputType.TYPE_MASK_VARIATION;
-        return variation == InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS;
+        int inputClass = inputType & InputType.TYPE_MASK_CLASS;
+        if (inputClass == InputType.TYPE_CLASS_PHONE) {
+            return true;
+        }
+        return variation == InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS
+                || variation == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+    }
+
+    private static boolean isOtpField(String[] hints, int inputType, AssistStructure.ViewNode node) {
+        if (containsIgnoredHints(node)) {
+            return false;
+        }
+        if (isPasswordField(hints, inputType, node) || isUsernameField(hints, inputType, node)) {
+            return false;
+        }
+
+        if (hints != null) {
+            for (String autofillHint : hints) {
+                if (autofillHint != null
+                        && (autofillHint.equalsIgnoreCase("smsOTPCode")
+                        || autofillHint.equalsIgnoreCase("sms_otp")
+                        || containsAnyTerm(autofillHint.toLowerCase(), OTP_HINTS))) {
+                    return true;
+                }
+            }
+        }
+
+        String hintText = node.getHint() != null ? node.getHint().toString().toLowerCase() : "";
+        if (containsAnyTerm(hintText, OTP_HINTS)) {
+            return true;
+        }
+
+        String idEntry = node.getIdEntry();
+        String idEntryLower = idEntry != null ? idEntry.toLowerCase() : "";
+        if (containsAnyTerm(idEntryLower, OTP_HINTS)) {
+            return true;
+        }
+
+        String autocomplete = getHtmlAttributeValue(node, "autocomplete");
+        if (autocomplete != null) {
+            String lower = autocomplete.toLowerCase();
+            if (lower.contains("one-time-code") || lower.contains("one_time_code")
+                    || containsAnyTerm(lower, OTP_HINTS)) {
+                return true;
+            }
+        }
+
+        String htmlType = getHtmlAttributeValue(node, "type");
+        if (htmlType != null && htmlType.equalsIgnoreCase("one-time-code")) {
+            return true;
+        }
+
+        String name = getHtmlAttributeValue(node, "name");
+        return name != null && containsAnyTerm(name.toLowerCase(), OTP_HINTS);
     }
 
     private static boolean isPasswordField(String[] hints, int inputType, AssistStructure.ViewNode node) {
@@ -459,7 +525,9 @@ public class AutofillHelper {
         }
 
         int inputClass = inputType & InputType.TYPE_MASK_CLASS;
-        if (inputClass != InputType.TYPE_CLASS_TEXT) {
+        if (inputClass != InputType.TYPE_CLASS_TEXT
+                && inputClass != InputType.TYPE_CLASS_PHONE
+                && inputClass != InputType.TYPE_CLASS_NUMBER) {
             return false;
         }
 

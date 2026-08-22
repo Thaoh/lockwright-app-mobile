@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 
+import com.pears.pass.autofill.utils.UriMatchHelper;
+
 public class CredentialItem {
     public static final String TYPE_LOGIN = "login";
     public static final String TYPE_CREDIT_CARD = "creditCard";
@@ -16,6 +18,7 @@ public class CredentialItem {
     private String url;
     private String notes;
     private List<String> websites;
+    private List<UriMatchHelper.UriEntry> uris;
 
     // Credit card fields
     private String cardNumber;
@@ -37,6 +40,7 @@ public class CredentialItem {
         this.username = username;
         this.password = password;
         this.websites = new ArrayList<>();
+        this.uris = new ArrayList<>();
         this.hasPasskey = false;
     }
 
@@ -46,6 +50,7 @@ public class CredentialItem {
         this.username = username;
         this.password = password;
         this.websites = websites != null ? websites : new ArrayList<>();
+        this.uris = new ArrayList<>();
         this.hasPasskey = false;
     }
 
@@ -61,6 +66,7 @@ public class CredentialItem {
         this.username = username;
         this.password = password;
         this.websites = websites != null ? websites : new ArrayList<>();
+        this.uris = new ArrayList<>();
         this.hasPasskey = hasPasskey;
         this.passkeyCreatedAt = passkeyCreatedAt;
         this.credential = credential;
@@ -123,6 +129,14 @@ public class CredentialItem {
 
     public void setWebsites(List<String> websites) {
         this.websites = websites != null ? websites : new ArrayList<>();
+    }
+
+    public List<UriMatchHelper.UriEntry> getUris() {
+        return uris;
+    }
+
+    public void setUris(List<UriMatchHelper.UriEntry> uris) {
+        this.uris = uris != null ? uris : new ArrayList<>();
     }
 
     public String getRecordType() {

@@ -3,6 +3,7 @@ package com.pears.pass.autofill.data;
 import android.content.Context;
 
 import com.pears.pass.autofill.utils.SecureLog;
+import com.pears.pass.autofill.utils.UriMatchHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -699,6 +700,20 @@ public class PearPassVaultClient {
                 });
     }
 
+    /**
+     * Schema-2 canonical list. Falls back to v1 keys when the v2 namespace is
+     * empty (pre-migrate / old worklet).
+     */
+    public CompletableFuture<List<Map<String, Object>>> listCanonicalRecords() {
+        return activeVaultList("record-v2/").thenCompose(v2 -> {
+            if (v2 != null && !v2.isEmpty()) {
+                return CompletableFuture.completedFuture(v2);
+            }
+            log("record-v2/ empty; falling back to record/");
+            return activeVaultList("record/");
+        });
+    }
+
     public CompletableFuture<Map<String, Object>> activeVaultGet(String key) {
         log("Getting from active vault with key: " + key);
         return sendRequest(13, createMap("key", key))
@@ -713,7 +728,7 @@ public class PearPassVaultClient {
 
         return getVaultEncryptionKey(vault)
                 .thenCompose(encryptionKey -> activeVaultInit(vault.id, encryptionKey))
-                .thenCompose(result -> activeVaultList("record/"))
+                .thenCompose(result -> listCanonicalRecords())
                 .thenApply(records -> {
                     log("Successfully fetched " + records.size() + " records from vault " + vault.name);
                     return records;
@@ -1874,7 +1889,7 @@ public class PearPassVaultClient {
     public CompletableFuture<List<Map<String, Object>>> searchLoginRecords(String rpId, String username) {
         log("Searching login records for rpId=" + rpId + ", username=" + username);
 
-        return activeVaultList("record/").thenApply(records -> {
+        return listCanonicalRecords().thenApply(records -> {
             List<Map<String, Object>> matches = new ArrayList<>();
 
             for (Map<String, Object> record : records) {
@@ -1893,33 +1908,19 @@ public class PearPassVaultClient {
                         ? ((String) recordData.get("username")).trim() : "";
                 String passkeyUsername = username != null ? username.trim() : "";
 
-                // Get websites from record
-                List<String> recordWebsites = new ArrayList<>();
-                Object websitesObj = recordData.get("websites");
-                if (websitesObj instanceof List) {
-                    for (Object w : (List<?>) websitesObj) {
-                        if (w instanceof String) {
-                            recordWebsites.add((String) w);
-                        }
-                    }
-                }
+                List<String> recordWebsites = UriMatchHelper.parseWebsites(recordData.get("websites"));
+                List<UriMatchHelper.UriEntry> recordUris = UriMatchHelper.parseUris(recordData.get("uris"));
 
-                // Check if any website matches the rpId
-                boolean websiteMatches = false;
-                for (String website : recordWebsites) {
-                    if (normalizedDomainMatch(website, rpId)) {
-                        websiteMatches = true;
-                        break;
-                    }
-                }
+                String pageUrl = UriMatchHelper.pageUrlFromWebDomain(rpId);
+                boolean websiteMatches = UriMatchHelper.recordMatchesPage(
+                        recordWebsites, recordUris, pageUrl);
 
                 // Check if username matches (both must be non-empty)
                 boolean usernameMatches = !passkeyUsername.isEmpty() && !recordUsername.isEmpty()
                         && passkeyUsername.equalsIgnoreCase(recordUsername);
 
                 // Skip records with both empty website and empty username
-                boolean hasNoWebsites = recordWebsites.isEmpty() || recordWebsites.stream()
-                        .allMatch(w -> w == null || w.trim().isEmpty());
+                boolean hasNoWebsites = UriMatchHelper.getRecordWebsiteValues(recordWebsites, recordUris).isEmpty();
                 boolean hasNoUsername = recordUsername.isEmpty();
                 if (hasNoWebsites && hasNoUsername) {
                     continue;
@@ -1944,7 +1945,7 @@ public class PearPassVaultClient {
     public CompletableFuture<List<CredentialItem>> listPasskeys(String rpId) {
         log("Listing passkeys" + (rpId != null ? " for RP: " + rpId : ""));
 
-        return activeVaultList("record/").thenApply(records -> {
+        return listCanonicalRecords().thenApply(records -> {
             List<CredentialItem> passkeys = new ArrayList<>();
 
             for (Map<String, Object> record : records) {
@@ -1965,46 +1966,33 @@ public class PearPassVaultClient {
                 Map<String, Object> credentialMap = (Map<String, Object>) credentialObj;
                 String credentialId = (String) credentialMap.get("id");
 
-                // Check rpId filter
                 if (rpId != null) {
-                    boolean matches = false;
-                    Object websitesObj = recordData.get("websites");
-                    if (websitesObj instanceof List) {
-                        for (Object website : (List<?>) websitesObj) {
-                            if (website instanceof String && normalizedDomainMatch((String) website, rpId)) {
-                                matches = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!matches) continue;
+                    List<String> websites = UriMatchHelper.parseWebsites(recordData.get("websites"));
+                    List<UriMatchHelper.UriEntry> uris = UriMatchHelper.parseUris(recordData.get("uris"));
+                    String pageUrl = UriMatchHelper.pageUrlFromWebDomain(rpId);
+                    if (!UriMatchHelper.recordMatchesPage(websites, uris, pageUrl)) continue;
                 }
 
                 String title = recordData.get("title") != null ? (String) recordData.get("title") : "Unknown";
                 String username = recordData.get("username") != null ? (String) recordData.get("username") : "";
                 String password = recordData.get("password") != null ? (String) recordData.get("password") : "";
 
-                List<String> websites = new ArrayList<>();
-                Object websitesListObj = recordData.get("websites");
-                if (websitesListObj instanceof List) {
-                    for (Object w : (List<?>) websitesListObj) {
-                        if (w instanceof String) websites.add((String) w);
-                    }
-                }
+                List<String> websites = UriMatchHelper.parseWebsites(recordData.get("websites"));
+                List<UriMatchHelper.UriEntry> uris = UriMatchHelper.parseUris(recordData.get("uris"));
 
-                // Parse passkey timestamp
                 long passkeyCreatedAt = 0;
                 Object passkeyTs = recordData.get("passkeyCreatedAt");
                 if (passkeyTs instanceof Number) {
                     passkeyCreatedAt = ((Number) passkeyTs).longValue();
                 }
 
-                // Private key and userId from credential
                 String privateKeyBuffer = (String) credentialMap.get("_privateKeyBuffer");
                 String userId = (String) credentialMap.get("_userId");
 
-                passkeys.add(new CredentialItem(id, title, username, password, websites,
-                        true, passkeyCreatedAt, credentialMap, privateKeyBuffer, userId, credentialId));
+                CredentialItem item = new CredentialItem(id, title, username, password, websites,
+                        true, passkeyCreatedAt, credentialMap, privateKeyBuffer, userId, credentialId);
+                item.setUris(uris);
+                passkeys.add(item);
             }
 
             log("Found " + passkeys.size() + " passkeys");
@@ -2020,7 +2008,7 @@ public class PearPassVaultClient {
     public CompletableFuture<List<String>> listFolders() {
         log("Listing folders");
 
-        return activeVaultList("record/").thenApply(records -> {
+        return listCanonicalRecords().thenApply(records -> {
             List<String> folders = new ArrayList<>();
 
             for (Map<String, Object> record : records) {

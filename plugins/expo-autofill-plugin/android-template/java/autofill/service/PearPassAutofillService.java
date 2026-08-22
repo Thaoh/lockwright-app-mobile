@@ -51,7 +51,7 @@ public class PearPassAutofillService extends AutofillService {
         AutofillHelper.ParsedFields parsedFields = AutofillHelper.parseStructure(structure);
 
         boolean hasSpecificFields = parsedFields != null
-                && (parsedFields.hasUsernameField() || parsedFields.hasPasswordField());
+                && (parsedFields.hasUsernameField() || parsedFields.hasPasswordField() || parsedFields.hasOtpField());
         boolean hasCardFields = parsedFields != null && parsedFields.hasCardField();
         boolean hasFallbackFields = parsedFields != null && parsedFields.hasAnyFallbackField();
 
@@ -78,6 +78,7 @@ public class PearPassAutofillService extends AutofillService {
         Intent authIntent = new Intent(this, AuthenticationActivity.class);
         authIntent.putExtra("username_id", parsedFields.getUsernameId());
         authIntent.putExtra("password_id", parsedFields.getPasswordId());
+        authIntent.putExtra("otp_id", parsedFields.getOtpId());
         authIntent.putExtra("card_number_id", parsedFields.getCardNumberId());
         authIntent.putExtra("card_expiry_date_id", parsedFields.getCardExpiryDateId());
         authIntent.putExtra("card_expiry_month_id", parsedFields.getCardExpiryMonthId());
@@ -139,9 +140,10 @@ public class PearPassAutofillService extends AutofillService {
         Dataset.Builder datasetBuilder = new Dataset.Builder();
 
         java.util.List<AutofillId> targetIds = new java.util.ArrayList<>();
-        if (parsedFields.hasUsernameField() || parsedFields.hasPasswordField() || hasCardFields) {
+        if (parsedFields.hasUsernameField() || parsedFields.hasPasswordField() || parsedFields.hasOtpField() || hasCardFields) {
             addIfNotNull(targetIds, parsedFields.getUsernameId());
             addIfNotNull(targetIds, parsedFields.getPasswordId());
+            addIfNotNull(targetIds, parsedFields.getOtpId());
             addIfNotNull(targetIds, parsedFields.getCardNumberId());
             addIfNotNull(targetIds, parsedFields.getCardExpiryDateId());
             addIfNotNull(targetIds, parsedFields.getCardExpiryMonthId());
