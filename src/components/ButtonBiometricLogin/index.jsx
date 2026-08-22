@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useLingui } from '@lingui/react/macro'
 import * as LocalAuthentication from 'expo-local-authentication'
@@ -29,6 +29,7 @@ export const ButtonBiometricLogin = ({ onBiometricLogin }) => {
   const { t } = useLingui()
 
   const [isAuthenticating, setIsAuthenticating] = useState(false)
+  const hasAutoPrompted = useRef(false)
   const { isBiometricsEnabled, isBiometricsSupported, biometricTypes } =
     useBiometricsAuthentication()
   const { hapticSuccess, hapticError } = useHapticFeedback()
@@ -66,6 +67,19 @@ export const ButtonBiometricLogin = ({ onBiometricLogin }) => {
       setIsAuthenticating(false)
     }
   }
+
+  useEffect(() => {
+    if (hasAutoPrompted.current) return
+    if (
+      !biometricTypes?.length ||
+      !isBiometricsSupported ||
+      !isBiometricsEnabled
+    ) {
+      return
+    }
+    hasAutoPrompted.current = true
+    handlePressBiometric()
+  }, [biometricTypes, isBiometricsEnabled, isBiometricsSupported])
 
   if (
     !biometricTypes?.length ||

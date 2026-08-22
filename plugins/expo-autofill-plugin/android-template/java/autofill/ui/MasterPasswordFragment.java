@@ -33,6 +33,7 @@ public class MasterPasswordFragment extends BaseAutofillFragment {
     private TextView errorText;
     private ImageView togglePasswordVisibility;
     private boolean isAuthenticatingBiometric = false;
+    private boolean hasAutoPromptedBiometric = false;
     private boolean isPasswordVisible = false;
     private android.os.CountDownTimer lockoutTimer;
     // Spinner overlay shown over Continue while auth is in flight.
@@ -60,7 +61,10 @@ public class MasterPasswordFragment extends BaseAutofillFragment {
                 } catch (Exception e) {
                     SecureLog.d("MasterPasswordFragment", "No vaults to close or error closing: " + e.getMessage());
                 }
+                scheduleAutoBiometricPrompt();
             });
+        } else {
+            scheduleAutoBiometricPrompt();
         }
     }
 
@@ -310,8 +314,8 @@ public class MasterPasswordFragment extends BaseAutofillFragment {
                         && getContext().getPackageManager().hasSystemFeature(
                                 android.content.pm.PackageManager.FEATURE_FINGERPRINT);
                 biometricButton.setText(hasFingerprint
-                        ? "Try again with Fingerprint"
-                        : "Try again with Biometrics");
+                        ? "Use Fingerprint"
+                        : "Use Biometrics");
 
                 biometricButton.setOnClickListener(v -> {
                     if (!isAuthenticatingBiometric) {
@@ -322,6 +326,21 @@ public class MasterPasswordFragment extends BaseAutofillFragment {
                 biometricButton.setVisibility(View.GONE);
             }
         }
+    }
+
+    private void scheduleAutoBiometricPrompt() {
+        FragmentActivity activity = getActivity();
+        View view = getView();
+        if (activity == null || view == null) return;
+
+        activity.runOnUiThread(() -> {
+            if (!isAdded() || hasAutoPromptedBiometric) return;
+            if (rateLimit != null && rateLimit.getStatus().isLocked) return;
+            if (biometricButton == null || biometricButton.getVisibility() != View.VISIBLE) return;
+            if (isAuthenticatingBiometric) return;
+            hasAutoPromptedBiometric = true;
+            view.post(this::handleBiometricLogin);
+        });
     }
 
     /**

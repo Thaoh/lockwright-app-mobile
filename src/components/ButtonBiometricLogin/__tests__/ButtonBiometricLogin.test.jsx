@@ -1,6 +1,6 @@
 import { i18n } from '@lingui/core'
 import { I18nProvider } from '@lingui/react'
-import { render } from '@testing-library/react-native'
+import { render, waitFor } from '@testing-library/react-native'
 jest.mock('expo-local-authentication', () => ({
   AuthenticationType: {
     FACIAL_RECOGNITION: 1,
@@ -37,6 +37,13 @@ jest.mock('../../BiometricWithIconAndText', () => {
     )
   }
 })
+
+jest.mock('../../../hooks/useHapticFeedback', () => ({
+  useHapticFeedback: () => ({
+    hapticSuccess: jest.fn(),
+    hapticError: jest.fn()
+  })
+}))
 
 const renderWithProviders = (ui) => {
   i18n.activate('en')
@@ -138,5 +145,53 @@ describe('ButtonBiometricLogin', () => {
     )
 
     expect(toJSON()).toBeNull()
+  })
+
+  it('prompts biometric unlock on open when fingerprint login is enabled', async () => {
+    const SecureStore = require('expo-secure-store')
+    const encryptionData = {
+      ciphertext: 'ct',
+      nonce: 'nonce',
+      hashedPassword: 'hash'
+    }
+    SecureStore.getItemAsync.mockResolvedValue(JSON.stringify(encryptionData))
+    mockOnBiometricLogin.mockResolvedValue()
+
+    useBiometricsAuthentication.mockReturnValue({
+      isBiometricsEnabled: true,
+      isBiometricsSupported: true,
+      biometricTypes: [LocalAuthentication.AuthenticationType.FINGERPRINT]
+    })
+    isFacialRecognitionSupported.mockReturnValue(false)
+    isFingerprintSupported.mockReturnValue(true)
+
+    renderWithProviders(
+      <ButtonBiometricLogin onBiometricLogin={mockOnBiometricLogin} />
+    )
+
+    await waitFor(() => {
+      expect(SecureStore.getItemAsync).toHaveBeenCalled()
+    })
+    await waitFor(() => {
+      expect(mockOnBiometricLogin).toHaveBeenCalledWith(encryptionData)
+    })
+  })
+
+  it('does not prompt biometric unlock on open when biometrics are off', () => {
+    const SecureStore = require('expo-secure-store')
+    useBiometricsAuthentication.mockReturnValue({
+      isBiometricsEnabled: false,
+      isBiometricsSupported: true,
+      biometricTypes: [LocalAuthentication.AuthenticationType.FINGERPRINT]
+    })
+    isFacialRecognitionSupported.mockReturnValue(false)
+    isFingerprintSupported.mockReturnValue(true)
+
+    renderWithProviders(
+      <ButtonBiometricLogin onBiometricLogin={mockOnBiometricLogin} />
+    )
+
+    expect(SecureStore.getItemAsync).not.toHaveBeenCalled()
+    expect(mockOnBiometricLogin).not.toHaveBeenCalled()
   })
 })
