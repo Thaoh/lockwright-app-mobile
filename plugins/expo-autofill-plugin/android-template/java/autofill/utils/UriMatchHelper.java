@@ -209,6 +209,14 @@ public final class UriMatchHelper {
         return "https://" + trimmed;
     }
 
+    /** com.twitter.android → twitter.com. Null/short names return as-is. */
+    public static String packageNameToDomain(String pkg) {
+        if (pkg == null || pkg.isEmpty()) return null;
+        String[] parts = pkg.split("\\.");
+        if (parts.length < 2) return pkg;
+        return parts[1] + "." + parts[0];
+    }
+
     private static boolean matchesDomain(String pageUrl, String website) {
         String pageHost = hostname(pageUrl);
         String recordHost = hostname(website);

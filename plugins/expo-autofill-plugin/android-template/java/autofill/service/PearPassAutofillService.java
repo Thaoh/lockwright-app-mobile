@@ -21,10 +21,13 @@ import android.widget.RemoteViews;
 import android.widget.inline.InlinePresentationSpec;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.autofill.inline.UiVersions;
 import androidx.autofill.inline.v1.InlineSuggestionUi;
 
+import com.pears.pass.autofill.data.AutofillUnlockSession;
+import com.pears.pass.autofill.data.CredentialItem;
 import com.pears.pass.autofill.ui.AuthenticationActivity;
 import com.pears.pass.autofill.utils.AutofillConstants;
 import com.pears.pass.autofill.utils.AutofillHelper;
@@ -63,48 +66,21 @@ public class PearPassAutofillService extends AutofillService {
                 return;
             }
 
-            Intent authIntent = new Intent(this, AuthenticationActivity.class);
-            putFieldExtras(authIntent, parsedFields);
-
-            int requestCode = requestCodeFor(parsedFields);
-            authIntent.setData(Uri.parse("pearpass://autofill/" + requestCode));
-
-            int flags = PendingIntent.FLAG_CANCEL_CURRENT;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                flags |= PendingIntent.FLAG_MUTABLE;
-            }
-
-            IntentSender sender = PendingIntent.getActivity(this, requestCode, authIntent, flags).getIntentSender();
-
-            RemoteViews presentation = new RemoteViews(getPackageName(), android.R.layout.simple_list_item_1);
-            presentation.setTextViewText(android.R.id.text1, "PearPass — Unlock to fill");
-
-            InlinePresentation inlinePresentation = buildInlinePresentation(
-                    request, authIntent, requestCode, flags, hasSpecificFields || hasCardFields);
-
-            Dataset.Builder datasetBuilder = new Dataset.Builder();
-            for (AutofillId targetId : targetIds) {
-                if (inlinePresentation != null) {
-                    datasetBuilder.setValue(
-                            targetId,
-                            AutofillValue.forText(AutofillConstants.PLACEHOLDER_PASSWORD),
-                            presentation,
-                            inlinePresentation
-                    );
-                } else {
-                    datasetBuilder.setValue(
-                            targetId,
-                            AutofillValue.forText(AutofillConstants.PLACEHOLDER_PASSWORD),
-                            presentation
-                    );
+            AutofillUnlockSession session = AutofillUnlockSession.get();
+            if (session.isUnlocked() && !hasCardFields) {
+                session.touch();
+                FillResponse unlocked = buildUnlockedResponse(request, parsedFields, targetIds);
+                if (unlocked != null) {
+                    callback.onSuccess(unlocked);
+                    return;
                 }
+                callback.onSuccess(buildLockedResponse(request, parsedFields, targetIds,
+                        hasSpecificFields || hasCardFields, "Open"));
+                return;
             }
-            datasetBuilder.setAuthentication(sender);
 
-            FillResponse response = new FillResponse.Builder()
-                    .addDataset(datasetBuilder.build())
-                    .build();
-            callback.onSuccess(response);
+            callback.onSuccess(buildLockedResponse(request, parsedFields, targetIds,
+                    hasSpecificFields || hasCardFields, "Unlock to fill"));
         } catch (Exception e) {
             SecureLog.e(TAG, "onFillRequest failed", e);
             try {
@@ -113,6 +89,252 @@ public class PearPassAutofillService extends AutofillService {
                 // Callback may already have been invoked.
             }
         }
+    }
+
+    @Nullable
+    private FillResponse buildUnlockedResponse(
+            FillRequest request,
+            AutofillHelper.ParsedFields parsedFields,
+            List<AutofillId> targetIds
+    ) {
+        InlineRequest inline = readInlineRequest(request);
+        int maxDatasets = inline != null ? Math.max(1, inline.maxCount) : 4;
+        int loginSlots = maxDatasets > 1 ? maxDatasets - 1 : maxDatasets;
+
+        List<CredentialItem> matches = AutofillUnlockSession.get().matchingLogins(
+                parsedFields.getWebDomain(),
+                parsedFields.getPackageName(),
+                loginSlots
+        );
+        if (matches.isEmpty()) {
+            return null;
+        }
+
+        int flags = pendingIntentFlags();
+        int requestCode = requestCodeFor(parsedFields);
+        FillResponse.Builder responseBuilder = new FillResponse.Builder();
+
+        for (int i = 0; i < matches.size(); i++) {
+            CredentialItem item = matches.get(i);
+            RemoteViews presentation = dropdownPresentation(chipTitle(item));
+            InlinePresentation inlinePresentation = null;
+            if (inline != null) {
+                inlinePresentation = buildCredentialInline(
+                        inline.specAt(i),
+                        requestCode + 20 + i,
+                        flags,
+                        chipTitle(item),
+                        chipSubtitle(item)
+                );
+            }
+            Dataset.Builder datasetBuilder = new Dataset.Builder();
+            applyLoginValues(datasetBuilder, parsedFields, targetIds, item, presentation, inlinePresentation);
+            responseBuilder.addDataset(datasetBuilder.build());
+        }
+
+        if (maxDatasets > matches.size()) {
+            responseBuilder.addDataset(buildAuthDataset(
+                    request, parsedFields, targetIds, requestCode, flags,
+                    inline,
+                    "PearPass",
+                    "More",
+                    hasSpecificFields(parsedFields)
+            ));
+        }
+
+        return responseBuilder.build();
+    }
+
+    private FillResponse buildLockedResponse(
+            FillRequest request,
+            AutofillHelper.ParsedFields parsedFields,
+            List<AutofillId> targetIds,
+            boolean pinChip,
+            String subtitle
+    ) {
+        int flags = pendingIntentFlags();
+        int requestCode = requestCodeFor(parsedFields);
+        Dataset authDataset = buildAuthDataset(
+                request, parsedFields, targetIds, requestCode, flags,
+                readInlineRequest(request),
+                "PearPass",
+                subtitle,
+                pinChip
+        );
+        return new FillResponse.Builder().addDataset(authDataset).build();
+    }
+
+    private Dataset buildAuthDataset(
+            FillRequest request,
+            AutofillHelper.ParsedFields parsedFields,
+            List<AutofillId> targetIds,
+            int requestCode,
+            int flags,
+            @Nullable InlineRequest inline,
+            String title,
+            String subtitle,
+            boolean pinChip
+    ) {
+        Intent authIntent = new Intent(this, AuthenticationActivity.class);
+        putFieldExtras(authIntent, parsedFields);
+        authIntent.setData(Uri.parse("pearpass://autofill/" + requestCode));
+
+        IntentSender sender = PendingIntent.getActivity(this, requestCode, authIntent, flags).getIntentSender();
+        RemoteViews presentation = dropdownPresentation(title + " — " + subtitle);
+        InlinePresentation inlinePresentation = null;
+        if (inline != null) {
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode + 1, authIntent, flags);
+            inlinePresentation = slicePresentation(
+                    inline.specAt(0), pendingIntent, title, subtitle, pinChip, android.R.drawable.ic_lock_lock);
+        }
+
+        Dataset.Builder datasetBuilder = new Dataset.Builder();
+        for (AutofillId targetId : targetIds) {
+            setDatasetValue(datasetBuilder, targetId,
+                    AutofillConstants.PLACEHOLDER_PASSWORD, presentation, inlinePresentation);
+        }
+        datasetBuilder.setAuthentication(sender);
+        return datasetBuilder.build();
+    }
+
+    private void applyLoginValues(
+            Dataset.Builder datasetBuilder,
+            AutofillHelper.ParsedFields parsedFields,
+            List<AutofillId> targetIds,
+            CredentialItem credential,
+            RemoteViews presentation,
+            @Nullable InlinePresentation inlinePresentation
+    ) {
+        boolean filledSpecific = false;
+        if (parsedFields.getUsernameId() != null) {
+            setDatasetValue(datasetBuilder, parsedFields.getUsernameId(),
+                    nullToEmpty(credential.getUsername()), presentation, inlinePresentation);
+            filledSpecific = true;
+        }
+        if (parsedFields.getPasswordId() != null) {
+            setDatasetValue(datasetBuilder, parsedFields.getPasswordId(),
+                    nullToEmpty(credential.getPassword()), presentation, inlinePresentation);
+            filledSpecific = true;
+        }
+        if (filledSpecific) return;
+
+        List<AutofillId> fallbacks = parsedFields.getFallbackFieldIds();
+        if (fallbacks != null && !fallbacks.isEmpty()) {
+            setDatasetValue(datasetBuilder, fallbacks.get(0),
+                    nullToEmpty(credential.getUsername()), presentation, inlinePresentation);
+            if (fallbacks.size() >= 2) {
+                setDatasetValue(datasetBuilder, fallbacks.get(1),
+                        nullToEmpty(credential.getPassword()), presentation, inlinePresentation);
+            }
+            return;
+        }
+
+        for (AutofillId targetId : targetIds) {
+            setDatasetValue(datasetBuilder, targetId,
+                    nullToEmpty(credential.getUsername()), presentation, inlinePresentation);
+        }
+    }
+
+    private static void setDatasetValue(
+            Dataset.Builder datasetBuilder,
+            AutofillId targetId,
+            String value,
+            RemoteViews presentation,
+            @Nullable InlinePresentation inlinePresentation
+    ) {
+        if (targetId == null) return;
+        if (inlinePresentation != null) {
+            datasetBuilder.setValue(targetId, AutofillValue.forText(value), presentation, inlinePresentation);
+        } else {
+            datasetBuilder.setValue(targetId, AutofillValue.forText(value), presentation);
+        }
+    }
+
+    private RemoteViews dropdownPresentation(String text) {
+        RemoteViews presentation = new RemoteViews(getPackageName(), android.R.layout.simple_list_item_1);
+        presentation.setTextViewText(android.R.id.text1, text);
+        return presentation;
+    }
+
+    @Nullable
+    private InlinePresentation buildCredentialInline(
+            InlinePresentationSpec spec,
+            int requestCode,
+            int flags,
+            String title,
+            String subtitle
+    ) {
+        if (spec == null) return null;
+        Intent click = new Intent(AutofillConstants.INLINE_CLICK_ACTION);
+        click.setPackage(getPackageName());
+        click.setData(Uri.parse("pearpass://autofill/inline/" + requestCode));
+        int immutable = flags;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            immutable = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, requestCode, click, immutable);
+        return slicePresentation(spec, pendingIntent, title, subtitle, true, android.R.drawable.ic_dialog_email);
+    }
+
+    @Nullable
+    private InlinePresentation slicePresentation(
+            InlinePresentationSpec spec,
+            PendingIntent pendingIntent,
+            String title,
+            String subtitle,
+            boolean pinned,
+            int iconRes
+    ) {
+        if (spec == null) return null;
+        if (!UiVersions.getVersions(spec.getStyle()).contains(UiVersions.INLINE_UI_VERSION_1)) {
+            return null;
+        }
+        Icon icon = Icon.createWithResource(this, iconRes);
+        android.app.slice.Slice slice = InlineSuggestionUi.newContentBuilder(pendingIntent)
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .setStartIcon(icon)
+                .setContentDescription(title)
+                .build()
+                .getSlice();
+        return new InlinePresentation(slice, spec, pinned);
+    }
+
+    private static String chipTitle(CredentialItem item) {
+        if (item.getUsername() != null && !item.getUsername().trim().isEmpty()) {
+            return item.getUsername().trim();
+        }
+        if (item.getTitle() != null && !item.getTitle().trim().isEmpty()) {
+            return item.getTitle().trim();
+        }
+        return AutofillConstants.UNKNOWN_CREDENTIAL;
+    }
+
+    private static String chipSubtitle(CredentialItem item) {
+        if (item.getUsername() != null && !item.getUsername().trim().isEmpty()
+                && item.getTitle() != null && !item.getTitle().trim().isEmpty()) {
+            return item.getTitle().trim();
+        }
+        return "PearPass";
+    }
+
+    private static String nullToEmpty(String value) {
+        return value != null ? value : "";
+    }
+
+    private static boolean hasSpecificFields(AutofillHelper.ParsedFields parsedFields) {
+        return parsedFields.hasUsernameField()
+                || parsedFields.hasPasswordField()
+                || parsedFields.hasOtpField()
+                || parsedFields.hasCardField();
+    }
+
+    private int pendingIntentFlags() {
+        int flags = PendingIntent.FLAG_CANCEL_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            flags |= PendingIntent.FLAG_MUTABLE;
+        }
+        return flags;
     }
 
     private static void putFieldExtras(Intent authIntent, AutofillHelper.ParsedFields parsedFields) {
@@ -151,39 +373,32 @@ public class PearPassAutofillService extends AutofillService {
         return Math.abs(hash);
     }
 
-    private InlinePresentation buildInlinePresentation(
-            FillRequest request,
-            Intent authIntent,
-            int requestCode,
-            int flags,
-            boolean pinChip
-    ) {
+    @Nullable
+    private static InlineRequest readInlineRequest(FillRequest request) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || request.getInlineSuggestionsRequest() == null) {
             return null;
         }
-        if (request.getInlineSuggestionsRequest().getMaxSuggestionCount() <= 0) {
-            return null;
-        }
+        int max = request.getInlineSuggestionsRequest().getMaxSuggestionCount();
+        if (max <= 0) return null;
         List<InlinePresentationSpec> specs = request.getInlineSuggestionsRequest().getInlinePresentationSpecs();
-        if (specs == null || specs.isEmpty()) {
-            return null;
+        if (specs == null || specs.isEmpty()) return null;
+        return new InlineRequest(max, specs);
+    }
+
+    private static final class InlineRequest {
+        final int maxCount;
+        final List<InlinePresentationSpec> specs;
+
+        InlineRequest(int maxCount, List<InlinePresentationSpec> specs) {
+            this.maxCount = maxCount;
+            this.specs = specs;
         }
 
-        InlinePresentationSpec spec = specs.get(0);
-        if (!UiVersions.getVersions(spec.getStyle()).contains(UiVersions.INLINE_UI_VERSION_1)) {
-            return null;
+        InlinePresentationSpec specAt(int index) {
+            if (specs.isEmpty()) return null;
+            int i = Math.min(index, specs.size() - 1);
+            return specs.get(i);
         }
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode + 1, authIntent, flags);
-        Icon icon = Icon.createWithResource(this, android.R.drawable.ic_lock_lock);
-        android.app.slice.Slice slice = InlineSuggestionUi.newContentBuilder(pendingIntent)
-                .setTitle("PearPass")
-                .setSubtitle("Unlock to fill")
-                .setStartIcon(icon)
-                .setContentDescription("PearPass autofill suggestion")
-                .build()
-                .getSlice();
-        return new InlinePresentation(slice, spec, pinChip);
     }
 
     @Override

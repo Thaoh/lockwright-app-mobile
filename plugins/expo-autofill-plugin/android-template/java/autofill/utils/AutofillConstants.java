@@ -42,4 +42,9 @@ public final class AutofillConstants {
     public static final String EXTRA_FALLBACK_IDS = "fallback_ids";
     public static final String EXTRA_WEB_DOMAIN = "web_domain";
     public static final String EXTRA_PACKAGE_NAME = "package_name";
+
+    /** In-memory autofill session; matches the app default (15 minutes). */
+    public static final long UNLOCK_SESSION_TTL_MS = 15 * 60 * 1000L;
+
+    public static final String INLINE_CLICK_ACTION = "com.pears.pass.autofill.INLINE_CLICK";
 }

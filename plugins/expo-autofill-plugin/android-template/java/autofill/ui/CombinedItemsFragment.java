@@ -31,6 +31,7 @@ import com.pears.pass.R;
 import com.pears.pass.autofill.data.CredentialItem;
 import com.pears.pass.autofill.data.PearPassVaultClient;
 import com.pears.pass.autofill.data.VaultItem;
+import com.pears.pass.autofill.data.AutofillUnlockSession;
 import com.pears.pass.autofill.jobs.AddPasskeyPayload;
 import com.pears.pass.autofill.jobs.Job;
 import com.pears.pass.autofill.jobs.JobEncryption;
@@ -327,11 +328,22 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
     // --- Vault loading ---
 
     private void loadVaults() {
+        if (MODE_ASSERTION.equals(mode)) {
+            List<CredentialItem> cached = AutofillUnlockSession.get().copyLogins();
+            if (!cached.isEmpty()) {
+                allCredentials.clear();
+                allCredentials.addAll(cached);
+                hasUserSearched = false;
+                applyFilter(searchInput != null ? searchInput.getText().toString() : "");
+            }
+        }
         if (vaultClient == null) {
             SecureLog.e(TAG, "vaultClient null on loadVaults");
             return;
         }
-        showLoading();
+        if (allCredentials.isEmpty()) {
+            showLoading();
+        }
         CompletableFuture.runAsync(() -> {
             try {
                 List<PearPassVaultClient.Vault> raw = vaultClient.listVaults().get();
@@ -356,6 +368,10 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
                     }
                 });
             } catch (Exception e) {
+                if (!allCredentials.isEmpty()) {
+                    SecureLog.d(TAG, "loadVaults failed with cached session list: " + e.getMessage());
+                    return;
+                }
                 handleAsyncError(TAG, "loadVaults failed: " + e.getMessage(), this::showEmpty);
             }
         });
@@ -427,6 +443,12 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
                     allCredentials.addAll(finalParsed);
                     hasUserSearched = false;
                     hidePasswordPrompt();
+                    if (MODE_ASSERTION.equals(mode)) {
+                        AutofillUnlockSession.get().unlock(
+                                finalParsed,
+                                AutofillConstants.UNLOCK_SESSION_TTL_MS
+                        );
+                    }
                     applyFilter(searchInput.getText().toString());
                 });
             } catch (Exception e) {
@@ -506,7 +528,7 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
             List<CredentialItem> matches = new ArrayList<>();
             String pageUrl = UriMatchHelper.pageUrlFromWebDomain(webDomain);
             String pkgPageUrl = packageName != null
-                    ? UriMatchHelper.pageUrlFromWebDomain(convertPackageToDomain(packageName))
+                    ? UriMatchHelper.pageUrlFromWebDomain(UriMatchHelper.packageNameToDomain(packageName))
                     : null;
             for (CredentialItem c : all) {
                 int rank = 0;
@@ -741,13 +763,6 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
         if (colon != -1) d = d.substring(0, colon);
         if (d.startsWith("www.")) d = d.substring(4);
         return d;
-    }
-
-    private String convertPackageToDomain(String pkg) {
-        if (pkg == null || pkg.isEmpty()) return null;
-        String[] parts = pkg.split("\\.");
-        if (parts.length < 2) return pkg;
-        return parts[1] + "." + parts[0];
     }
 
     private boolean isPasskeyAssertionMode() {

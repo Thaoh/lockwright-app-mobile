@@ -29,6 +29,7 @@ import com.pears.pass.autofill.crypto.PasskeyCrypto;
 import com.pears.pass.autofill.data.CredentialItem;
 import com.pears.pass.autofill.data.PasskeyCredential;
 import com.pears.pass.autofill.data.PearPassVaultClient;
+import com.pears.pass.autofill.data.AutofillUnlockSession;
 import com.pears.pass.autofill.utils.AutofillConstants;
 import com.pears.pass.autofill.utils.SecureLog;
 import com.pears.pass.autofill.utils.VaultInitializer;
@@ -273,6 +274,8 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
         } else {
             applyLoginValues(datasetBuilder, credential, presentation);
         }
+
+        AutofillUnlockSession.get().touch();
 
         Dataset dataset;
         try {
@@ -629,8 +632,13 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
             SecureLog.d(TAG, "Setting flow to missingConfiguration (passwordSet=false)");
             navigateToMissingConfiguration();
         } else if (!state.isLoggedIn) {
-            SecureLog.d(TAG, "Setting flow to masterPassword (passwordSet=true, loggedIn=false)");
-            navigateToMasterPassword();
+            if (AutofillUnlockSession.get().isUnlocked()) {
+                SecureLog.d(TAG, "Session unlocked, skipping master password");
+                navigateToVaultSelection();
+            } else {
+                SecureLog.d(TAG, "Setting flow to masterPassword (passwordSet=true, loggedIn=false)");
+                navigateToMasterPassword();
+            }
         } else {
             SecureLog.d(TAG, "User is logged in, navigating to vault selection");
             navigateToVaultSelection();
@@ -707,6 +715,9 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
             if (!this.hasPasswordSet && finalCouldCheck) {
                 SecureLog.d(TAG, "Error handler - Setting flow to missingConfiguration (passwordSet=false, confirmed)");
                 navigateToMissingConfiguration();
+            } else if (AutofillUnlockSession.get().isUnlocked()) {
+                SecureLog.d(TAG, "Error handler - Session unlocked, showing cached logins");
+                navigateToVaultSelection();
             } else if (this.hasPasswordSet && finalCouldCheck) {
                 // Password is set and we confirmed it - show master password screen
                 SecureLog.d(TAG, "Error handler - Setting flow to masterPassword (passwordSet=true, confirmed)");
