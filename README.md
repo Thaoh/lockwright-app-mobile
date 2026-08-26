@@ -2,9 +2,13 @@
   <img src="docs/logo.svg" alt="Lockwright" width="128"/>
 </p>
 
-# PearPass Mobile
+# Lockwright Mobile
 
-> The mobile app for PearPass, an open-source, end-to-end encrypted password and identity manager built on Pear Runtime.
+Mobile app for Lockwright. Peer-to-peer password manager. Vaults stay on the device. Sync is device to device.
+
+Community fork of PearPass (Apache 2.0). Not affiliated with or endorsed by Tether Data or the Pears project.
+
+npm names, store listings, and shipped binaries still say PearPass until identity `works.dexterity.lockwright` lands. Do not take over Play listing `com.pears.pass`.
 
 ---
 
@@ -13,7 +17,7 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Installation](#installation)
-- [Usage Examples](#usage-examples)
+- [Usage](#usage)
 - [Architecture](#architecture)
 - [Starting the Application](#starting-the-application)
 - [Prebuild](#prebuild)
@@ -29,21 +33,19 @@
 
 ## Introduction
 
-PearPass is an open-source, privacy-first password and identity manager that gives you full control over your sensitive information. It makes storing and managing your credentials simple, secure, and private. PearPass encrypts and stores all data locally on your device.
+Lockwright encrypts and stores credentials on the device. Sync is peer to peer. No cloud account.
 
-Unlike traditional password managers that rely on centralized servers, PearPass is built on [Pear Runtime](https://pears.com/) and uses peer-to-peer technology to sync your credentials directly between your devices, ensuring they remain private, secure, and always under your control.
+The on-disk vault at the fork point is PearPass's. Vault work in this tree aims to open those vaults in place. Test that on a copy.
 
 ---
 
 ## Features
 
-- **Encrypted-at-rest storage** — PearPass encrypts passwords, credit cards, secure notes, and custom fields before writing them to disk.
-- **Biometric authentication** — Unlock your vault with fingerprint or face recognition.
-- **Cross-device sync** — PearPass syncs credentials directly between your devices, with no central server.
-- **Offline access** — Access your vault anytime, even without a network connection.
-- **Password health** — Analyse password strength and identify weak passwords.
-- **Random password generator** — Generate strong, unique passwords.
-- **Easy-to-use interface** — a clean, intuitive design for managing your credentials on the go.
+- Encrypted-at-rest storage for passwords, cards, notes, and custom fields
+- Biometric unlock
+- Direct device-to-device sync, no central server
+- Offline access
+- Password health and a random password generator
 
 ---
 
@@ -51,91 +53,70 @@ Unlike traditional password managers that rely on centralized servers, PearPass 
 
 ### Prerequisites
 
-- **Node.js** — check the required version in `.nvmrc` and verify with:
+- **Node.js** — version in `.nvmrc`
+- **pnpm** `11.10.0` (`packageManager` in `package.json`)
 
 ```bash
-node --version
-```
-
-### Steps
-
-```bash
-# 1. Clone the repository
-git clone git@github.com:tetherto/pearpass-app-mobile.git
-
-# 2. Go to the cloned directory
-cd pearpass-app-mobile
-
-# 3. Install dependencies
-npm install
-
-# 4. Generate translation keys
-npm run lingui:extract
-npm run lingui:compile
-
-# 5. Generate worklet bundles
-npm run bundle-bare
-
-# 6. Generate native iOS and Android directories (see Prebuild below)
+git clone git@github.com:Thaoh/lockwright-app-mobile.git
+cd lockwright-app-mobile
+pnpm install
+pnpm run lingui:extract
+pnpm run lingui:compile
+pnpm run bundle-bare
 npx expo prebuild --clean
 ```
 
+In the Lockwright superproject, run `./scripts/fetch-packages.sh --layout` so `file:../pearpass-lib-vault` resolves.
+
 ---
 
-## Usage Examples
+## Usage
 
-Visit the official PearPass documentation for step-by-step guides on setup, vault management, syncing across devices, browser extension usage, and all other PearPass features:
-
-**[docs.pass.pears.com](https://docs.pass.pears.com)**
+PearPass docs at [docs.pass.pears.com](https://docs.pass.pears.com) describe the product at the fork point. They are not Lockwright docs.
 
 ---
 
 ## Architecture
 
-This project uses **Expo Plugins** to manage native iOS and Android configurations. Git does not track the `ios/` and `android/` directories — Expo's prebuild system generates them dynamically.
+Expo plugins manage native iOS and Android config. Git does not track `ios/` or `android/`. Prebuild generates them.
 
-### Key Points:
-
-- Git ignores the native directories (`ios/` and `android/`).
-- Expo plugins in the `plugins/` directory manage all native configurations.
-- Running `npx expo prebuild --clean` generates the native directories with all necessary configurations.
+- Native directories are gitignored
+- Plugins live under `plugins/`
+- `npx expo prebuild --clean` generates native trees
 
 ---
 
 ## Starting the Application
 
-Before starting the application, build it first. The build command produces bundles for iOS, iOS extension, and Android, and runs the custom prebuild:
+Build first. That produces iOS, iOS extension, and Android bundles and runs custom prebuild.
 
 ```bash
-# Build the application
-npm run build
-
-# Then start on your preferred platform
-npm run ios      # For iOS
-npm run android  # For Android
+pnpm run build
+pnpm run ios
+pnpm run android
 ```
 
 ---
 
 ## Prebuild
 
-This repo is Expo-managed. Prebuild generates the native `android/` and `ios/` folders; they are not committed.
+This repo is Expo-managed. Prebuild generates `android/` and `ios/`. They are not committed.
 
-### Standard (Play/normal) Android prebuild
+### Play / normal Android
 
 ```bash
-npm run bundle-bare
+pnpm run bundle-bare
 npx expo prebuild --platform android --clean
 ```
 
-### F-Droid Android prebuild
+### F-Droid Android
 
 ```bash
-npm run bundle-bare
+pnpm run bundle-bare
 PEARPASS_DISTRIBUTION=fdroid npx expo prebuild --platform android --clean
 ```
 
-More details:
+The env var is still `PEARPASS_DISTRIBUTION` until identity lands.
 
 - [`docs/fdroid/build.md`](docs/fdroid/build.md)
 - [`docs/fdroid/version-check.md`](docs/fdroid/version-check.md)
@@ -144,19 +125,13 @@ More details:
 
 ## Testing
 
-### Unit Testing
-
-Run unit tests with Jest:
-
 ```bash
-npm test
+pnpm test
 ```
 
-### End-to-End Testing
+End-to-end: WebdriverIO + Appium on Android and iOS, optional BrowserStack and Qase.
 
-PearPass uses WebdriverIO + Appium for end-to-end testing on Android and iOS, with optional BrowserStack execution and Qase test management.
-
-See [`e2e/SETUP_AND_RUN_GUIDE.md`](e2e/SETUP_AND_RUN_GUIDE.md) for the full setup and run instructions, and [`e2e/AUTOMATED_TEST_CASES.md`](e2e/AUTOMATED_TEST_CASES.md) for the test catalog.
+See [`e2e/SETUP_AND_RUN_GUIDE.md`](e2e/SETUP_AND_RUN_GUIDE.md) and [`e2e/AUTOMATED_TEST_CASES.md`](e2e/AUTOMATED_TEST_CASES.md).
 
 ---
 
@@ -173,48 +148,43 @@ See [`e2e/SETUP_AND_RUN_GUIDE.md`](e2e/SETUP_AND_RUN_GUIDE.md) for the full setu
 
 ## Related Projects
 
-| Project                                                                                                          | Description                                |
-| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| [`pearpass-app-desktop`](https://github.com/tetherto/pearpass-app-desktop)                                       | Desktop app for PearPass                   |
-| [`pearpass-lib-vault`](https://github.com/tetherto/pearpass-lib-vault)                                           | Vault management library                   |
-| [`pearpass-lib-vault-core`](https://github.com/tetherto/pearpass-lib-vault-core)                                 | Bare worker and client for PearPass vaults |
-| [`pearpass-lib-ui-react-native-components`](https://github.com/tetherto/pearpass-lib-ui-react-native-components) | React Native UI component library          |
-| [`pearpass-lib-ui-react-components`](https://github.com/tetherto/pearpass-lib-ui-react-components)               | React UI component library                 |
-| [`tether-dev-docs`](https://github.com/tetherto/tether-dev-docs)                                                 | Developer documentation and guides         |
+| Project | Description |
+| --- | --- |
+| [`lockwright-app-desktop`](https://github.com/Thaoh/lockwright-app-desktop) | Desktop |
+| [`lockwright-app-browser-extension`](https://github.com/Thaoh/lockwright-app-browser-extension) | Browser extension |
+| [`lockwright-lib-vault`](https://github.com/Thaoh/lockwright-lib-vault) | Vault |
+| [`lockwright-lib-vault-core`](https://github.com/Thaoh/lockwright-lib-vault-core) | Vault core |
+| [`lockwright-lib-constants`](https://github.com/Thaoh/lockwright-lib-constants) | Shared constants |
 
 ---
 
 ## Contributing
 
-We welcome contributions. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the development workflow and coding conventions.
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ---
 
 ## Logging
 
-Logging is off by default. When enabled, logs are written to the app's cache directory — `main.log` from the JS host (React Native side) and `core-logs.txt` from the Bare vault worker. The worker's sink redacts known sensitive fields (passwords, keys, tokens, etc.) before writing to `core-logs.txt`. The host logger does not redact, so treat anything passed to `logger.*` on the JS side as on-disk-visible in `main.log`.
+Off by default. When enabled, logs go to the app cache directory: `main.log` from the JS host, `core-logs.txt` from the Bare vault worker. The worker sink redacts known sensitive fields. The host logger does not. Treat anything passed to `logger.*` on the JS side as visible on disk in `main.log`.
 
-Two ways to enable:
+- In-app: Settings → Diagnostics → **Enable logs**. Persists. Off stops writes and keeps files. On again appends.
+- Nightly (`PearPass-nightly`): logging defaults to `debug` on first launch. Channel name is still PearPass until identity lands.
 
-- **In-app toggle** (Settings → Diagnostics → **Enable logs**). Persists across launches. Toggling off stops writes but keeps existing log files; toggling back on resumes appending to the same files, so a session can span multiple toggles.
-- **Nightly builds** (`PearPass-nightly`): logging defaults to `debug` on first launch so testers don't have to opt in. The toggle still works to disable it.
-
-Logs can be shared via Diagnostics screen **Share logs** action that zips both files plus a small metadata file (app version, distribution channel).
+Diagnostics **Share logs** zips both files plus metadata (app version, distribution channel).
 
 ---
 
 ## Error reporting
 
-**PearPass mobile is open source. Public releases and self-built versions never send any data anywhere. Sentry is only enabled on our nightly distribution channel for catching crashes during pre-release testing.**
+Public releases and self-built versions send nothing. Sentry is only on the nightly distribution channel.
 
-Verifying:
-
-- The gate is `isNightly()` from `src/constants/distribution.js`. Returns `false` unless the distribution channel is `nightly`.
-- The Expo config plugin for Sentry is only loaded when `PEARPASS_DISTRIBUTION=nightly` at build time. `app.config.ts`. `app.json` has no Sentry plugin entry, so standard / F-Droid builds never include it.
-- The Bare-side Sentry SDK (`sentry-bare`) is an optional peer dependency of `pearpass-lib-vault-core` — public builds don't install it.
+- Gate: `isNightly()` in `src/constants/distribution.js`. False unless the channel is `nightly`.
+- Expo Sentry plugin loads only when `PEARPASS_DISTRIBUTION=nightly` at build time. `app.json` has no Sentry plugin, so standard and F-Droid builds never include it.
+- Bare Sentry (`sentry-bare`) is an optional peer of `pearpass-lib-vault-core`. Public builds do not install it.
 
 ---
 
 ## License
 
-This project is licensed under the Apache License, Version 2.0. See the [LICENSE](./LICENSE) file for details.
+Apache License 2.0. See `LICENSE.md` and `NOTICE.md`.
