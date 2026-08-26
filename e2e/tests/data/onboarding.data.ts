@@ -22,7 +22,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
         HEADER (shown on every onboarding slide)
   ===================================================== */
 export const ONBOARDING_HEADER = {
-  title: 'PearPass',
+  title: 'Lockwright',
 } as const;
 
 /* =====================================================

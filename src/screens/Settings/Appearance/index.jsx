@@ -90,7 +90,7 @@ export const Appearance = () => {
         <View style={styles.textBlock}>
           <Text variant="bodyEmphasized">{t`App Language`}</Text>
           <Text variant="label" color={theme.colors.colorTextSecondary}>
-            {t`Select the language used throughout PearPass.`}
+            {t`Select the language used throughout Lockwright.`}
           </Text>
         </View>
 

@@ -6,7 +6,7 @@ const withRiveAssets: ConfigPlugin = (config) => {
   // iOS: Copy .riv files to project directory and add to Xcode project
   config = withXcodeProject(config, async (cfg) => {
     const project = cfg.modResults;
-    const projectName = cfg.modRequest.projectName || 'PearPass';
+    const projectName = cfg.modRequest.projectName || 'Lockwright';
     const iosDir = cfg.modRequest.platformProjectRoot;
     const templateDir = path.join(__dirname, '../templates/ios');
     const projectDir = path.join(iosDir, projectName);

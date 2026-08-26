@@ -56,10 +56,10 @@ export const CreatePasswordScreen = () => {
       subtitleTestID="onboarding-create-password-subtitle"
       subtitle={
         <>
-          {t`This is the key to access PearPass.`}{' '}
+          {t`This is the key to access Lockwright.`}{' '}
           {unsupportedFeaturesEnabled() ? (
             <>
-              {t`Already using PearPass?`}
+              {t`Already using Lockwright?`}
               <Link
                 onClick={handleTransferData}
                 data-testid="onboarding-transfer-data-link"
@@ -88,7 +88,7 @@ export const CreatePasswordScreen = () => {
                 onClick={() => Keyboard.dismiss()}
                 data-testid="onboarding-terms-link"
               >
-                {t`PearPass Application Terms of Use`}
+                {t`Lockwright Application Terms of Use`}
               </Link>
               .
             </Text>

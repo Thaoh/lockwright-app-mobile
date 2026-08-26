@@ -28,7 +28,7 @@ const withCustomSplashStoryboard: ConfigPlugin = (config) => {
 
     const templateDir = path.join(__dirname, '../../templates/ios');
     const storyboardSrc = path.join(templateDir, 'SplashScreen.storyboard');
-    const projectName = cfg.modRequest.projectName || cfg.name || 'PearPass';
+    const projectName = cfg.modRequest.projectName || cfg.name || 'Lockwright';
     const storyboardDest = path.join(cfg.modRequest.platformProjectRoot, projectName, 'SplashScreen.storyboard');
 
     // Copy our storyboard (overwrites the default one created by Expo)
@@ -50,7 +50,7 @@ const withSplashScreenAssets: ConfigPlugin = (config) => {
 
     const templateDir = path.join(__dirname, '../../templates/ios');
     const iosDir = cfg.modRequest.platformProjectRoot;
-    const projectName = cfg.modRequest.projectName || cfg.name || 'PearPass';
+    const projectName = cfg.modRequest.projectName || cfg.name || 'Lockwright';
     const projectDir = path.join(iosDir, projectName);
     const imagesDir = path.join(projectDir, 'Images.xcassets');
 

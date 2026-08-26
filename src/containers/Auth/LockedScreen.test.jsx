@@ -200,7 +200,7 @@ describe('LockedScreen', () => {
     const { getByTestId, getByText } = renderLockedScreen()
 
     expect(getByTestId('locked-screen-page-header').props.children).toBe(
-      'PearPass locked'
+      'Lockwright locked'
     )
     expect(getByText('Too many failed attempts.')).toBeTruthy()
     expect(

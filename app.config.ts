@@ -21,7 +21,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: config.name || 'PearPass',
+    name: config.name || 'Lockwright',
     slug: config.slug || 'pearpass-app-mobile',
     plugins,
     extra: {

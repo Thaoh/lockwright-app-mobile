@@ -231,7 +231,7 @@ const homeLocators = {
 
 
     noItemSavedTitle: '//android.view.View[@text="No item saved"]',
-    noItemSavedDescription: '//android.widget.TextView[@text="Start using PearPass creating your first item or import your items from a different password manager"]',
+    noItemSavedDescription: '//android.widget.TextView[@text="Start using Lockwright creating your first item or import your items from a different password manager"]',
     /* ============================
         LOADED ITEMS
     ============================ */

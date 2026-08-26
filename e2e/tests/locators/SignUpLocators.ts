@@ -38,7 +38,7 @@ const signUpLocators = {
   passwordNotMatchWarningIcon: '//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.widget.ScrollView/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.widget.ScrollView/android.view.ViewGroup/com.horcrux.svg.SvgView',
 
   termsOfUseText: '//android.widget.TextView[@resource-id="onboarding-v2-terms-text"]',
-  termsOfUseLink: '~PearPass Application Terms of Use',
+  termsOfUseLink: '~Lockwright Application Terms of Use',
 
   continueButton: '~Continue',
   continueButtonText: '//android.widget.TextView[@text="Continue"]',
@@ -60,7 +60,7 @@ const signUpLocators = {
   noneButtonText: '//android.widget.TextView[@resource-id="android:id/title" and @text="None"]',
 
   pearPassButton: '//androidx.recyclerview.widget.RecyclerView[@resource-id="com.android.settings:id/recycler_view"]/android.widget.LinearLayout[2]',
-  pearPassButtonText: '//android.widget.TextView[@resource-id="android:id/title" and @text="PearPass Nightly"]',
+  pearPassButtonText: '//android.widget.TextView[@resource-id="android:id/title" and @text="Lockwright Nightly"]',
   pearPassButtonIcon: '(//android.widget.LinearLayout[@resource-id="com.android.settings:id/icon_frame"])[2]',
 
   googleButton: '//androidx.recyclerview.widget.RecyclerView[@resource-id="com.android.settings:id/recycler_view"]/android.widget.LinearLayout[3]',

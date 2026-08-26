@@ -27,7 +27,7 @@
         android:layout_weight="1"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textAppearance="@style/TextAppearance.PearPass.LabelEmphasized"
+        android:textAppearance="@style/TextAppearance.Lockwright.LabelEmphasized"
         android:textColor="@color/pp_text_primary"
         tools:text="Personal Vault" />
 

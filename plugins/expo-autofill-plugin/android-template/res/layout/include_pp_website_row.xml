@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Website"
-        android:textAppearance="@style/TextAppearance.PearPass.Caption"
+        android:textAppearance="@style/TextAppearance.Lockwright.Caption"
         android:textColor="@color/pp_text_primary" />
 
     <EditText

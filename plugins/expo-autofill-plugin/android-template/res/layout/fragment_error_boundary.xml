@@ -38,7 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textAppearance="@style/TextAppearance.PearPass.Title"
+            android:textAppearance="@style/TextAppearance.Lockwright.Title"
             android:textColor="@color/pp_text_primary"
             tools:text="Autofill Error" />
 
@@ -48,7 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/pp_spacing_s8"
             android:gravity="center"
-            android:textAppearance="@style/TextAppearance.PearPass.Label"
+            android:textAppearance="@style/TextAppearance.Lockwright.Label"
             android:textColor="@color/pp_text_secondary"
             tools:text="Unable to initialize autofill" />
 
@@ -58,7 +58,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/pp_spacing_s8"
             android:gravity="center"
-            android:textAppearance="@style/TextAppearance.PearPass.Label"
+            android:textAppearance="@style/TextAppearance.Lockwright.Label"
             android:textColor="@color/pp_text_secondary"
             android:visibility="gone"
             tools:text="Please try again."
@@ -72,7 +72,7 @@
 
         <Button
             android:id="@+id/errorV2GoBackButton"
-            style="@style/Button.PearPass.Primary"
+            style="@style/Button.Lockwright.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/pp_spacing_s16"

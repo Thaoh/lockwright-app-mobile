@@ -1,4 +1,4 @@
-# Setup and Run Guide - PearPass E2E Mobile Tests
+# Setup and Run Guide - Lockwright E2E Mobile Tests
 
 ## 📋 Table of Contents
 
@@ -13,7 +13,7 @@
 
 ## Overview
 
-This guide will help you set up and run end-to-end mobile automation tests for the PearPass application. The test framework supports:
+This guide will help you set up and run end-to-end mobile automation tests for the Lockwright application. The test framework supports:
 
 - **Platforms**: Android and iOS
 - **Execution Targets**: BrowserStack (cloud), Local real devices, Local emulators/simulators
@@ -259,10 +259,10 @@ Place your app files in the appropriate directories:
 
 ```env
 # For Android
-ANDROID_APP=PearPass.apk                  # Place in apps/android/ folder
+ANDROID_APP=Lockwright.apk                  # Place in apps/android/ folder
 
 # For iOS
-IOS_APP=PearPass.ipa                      # Place in apps/ios/ folder
+IOS_APP=Lockwright.ipa                      # Place in apps/ios/ folder
 ```
 
 **Note**: Create `apps/android/` and `apps/ios/` directories if they don't exist.

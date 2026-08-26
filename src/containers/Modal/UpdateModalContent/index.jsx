@@ -33,7 +33,7 @@ export const UpdateModalContent = () => {
             { color: theme.colors.colorTextSecondary }
           ]}
         >
-          {t`A newer version of PearPass is available. Please update to the latest version to continue using the app.`}
+          {t`A newer version of Lockwright is available. Please update to the latest version to continue using the app.`}
         </Text>
 
         <View style={styles.footer}>

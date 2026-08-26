@@ -332,7 +332,7 @@ export const BlindPeeringSection = () => {
                   {
                     value: DEFAULT,
                     label: t`Automatic Blind Peers`,
-                    description: t`Let PearPass allocate blind peers for you to handle syncing`
+                    description: t`Let Lockwright allocate blind peers for you to handle syncing`
                   }
                 ]}
                 value={peerMode}

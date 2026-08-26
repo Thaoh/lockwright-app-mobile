@@ -58,7 +58,7 @@ export const PairThisDeviceContent = ({ tabs }) => {
       {tabs}
       <Text
         style={styles.qrCodeTitle}
-      >{t`Scan this QR code while in the PearPass App`}</Text>
+      >{t`Scan this QR code while in the Lockwright App`}</Text>
       <View style={styles.qrCodeContainer}>
         {svg.length > 0 && (
           <SvgXml testID="qr-code" xml={svg} width="100%" height="100%" />

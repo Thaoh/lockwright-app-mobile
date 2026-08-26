@@ -101,7 +101,7 @@ const settingsLocators = {
         APP PREFERENCES SCREEN
   ============================ */
   appPreferencesScreenTitle: '//android.view.View[@text="App Preferences"]',
-  appPreferencesScreenSubtitle: '//android.widget.TextView[@text="Control how PearPass works and keep your vault secure."]',
+  appPreferencesScreenSubtitle: '//android.widget.TextView[@text="Control how Lockwright works and keep your vault secure."]',
 
   /* ----- Autofill & Browsing ----- */
   autofillAndBrowsingSectionTitle: '//android.widget.TextView[@text="Autofill & Browsing"]',
@@ -115,7 +115,7 @@ const settingsLocators = {
   autoFIllServicesToolbar: '~Autofill service',
   autoFIllServicesBackButton: '~Navigate up',
   autoFIllServicesPearPassRadioButton: '//androidx.recyclerview.widget.RecyclerView[@resource-id="com.android.settings:id/recycler_view"]/android.widget.LinearLayout[2]',
-  autoFIllServicesPearPassRadioButtonText: '//android.widget.TextView[@resource-id="android:id/title" and @text="PearPass Nightly"]',
+  autoFIllServicesPearPassRadioButtonText: '//android.widget.TextView[@resource-id="android:id/title" and @text="Lockwright Nightly"]',
   autoFIllServicesPearPassRadioButtonIcon: '(//android.widget.ImageView[@resource-id="android:id/icon"])[3]',
 
   autofillPopup: '//androidx.appcompat.widget.LinearLayoutCompat[@resource-id="com.android.settings:id/parentPanel"]',
@@ -174,7 +174,7 @@ const settingsLocators = {
   unlockMethodInfoIcon: '//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.widget.ScrollView/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[3]/android.widget.ScrollView/android.view.ViewGroup/com.horcrux.svg.SvgView',
 
   unlockMethodMasterPasswordTitle: '//android.widget.TextView[@text="Master Password"]',
-  unlockMethodMasterPasswordDescription: '//android.widget.TextView[@text="Use your master password to unlock PearPass and decrypt your vault"]',
+  unlockMethodMasterPasswordDescription: '//android.widget.TextView[@text="Use your master password to unlock Lockwright and decrypt your vault"]',
   unlockMethodMasterPasswordCheckboxChecked: '',
   unlockMethodMasterPasswordCheckboxUnchecked: '',
 
@@ -253,9 +253,9 @@ const settingsLocators = {
   blindPeeringPageEnableFieldToggleOff: '~Enable Blind Peering',
   blindPeeringPageEnableFieldToggleOn: '',
 
-  automaticBlindPeersField: '~Automatic Blind Peers, Let PearPass allocate blind peers for you to handle syncing',
+  automaticBlindPeersField: '~Automatic Blind Peers, Let Lockwright allocate blind peers for you to handle syncing',
   automaticBlindPeersFieldTitle: '//android.widget.TextView[@text="Automatic Blind Peers"]',
-  automaticBlindPeersFieldText: '//android.widget.TextView[@text="Let PearPass allocate blind peers for you to handle syncing"]',
+  automaticBlindPeersFieldText: '//android.widget.TextView[@text="Let Lockwright allocate blind peers for you to handle syncing"]',
   automaticBlindPeersFieldCheckboxChecked: '',
   automaticBlindPeersFieldCheckboxUnchecked: '',
 
@@ -593,11 +593,11 @@ const settingsLocators = {
   encryptedFileUploadFileFieldText2: '//android.widget.TextView[@text="Required formats: .JSON"]',
 
   encryptedFileImportedFIleField: '//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.widget.ScrollView/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[3]/android.widget.ScrollView/android.view.ViewGroup/android.view.ViewGroup[2]',
-  encryptedFileImportedFIleFieldText: '//android.widget.TextView[@text="PearPass_ytgiu_2025_12_02T10_41_25_523Z.json"]',
+  encryptedFileImportedFIleFieldText: '//android.widget.TextView[@text="Lockwright_ytgiu_2025_12_02T10_41_25_523Z.json"]',
   encryptedFileImportedFIleFieldIcon: '//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.widget.ScrollView/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[3]/android.widget.ScrollView/android.view.ViewGroup/android.view.ViewGroup[3]',
   encryptedFileImportedFIleFieldIcon2: '//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.widget.ScrollView/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[3]/android.widget.ScrollView/android.view.ViewGroup/com.horcrux.svg.SvgView',
-  encryptedFileImportedFIleFieldFileSizeText: '//android.widget.TextView[@text="PearPass_ytgiu_2025_12_02T10_41_25_523Z.json"]',
-  encryptedFileImportedFIleFieldDeleteButton: '~Remove PearPass_ytgiu_2025_12_02T10_41_25_523Z.json',
+  encryptedFileImportedFIleFieldFileSizeText: '//android.widget.TextView[@text="Lockwright_ytgiu_2025_12_02T10_41_25_523Z.json"]',
+  encryptedFileImportedFIleFieldDeleteButton: '~Remove Lockwright_ytgiu_2025_12_02T10_41_25_523Z.json',
 
   /* ----- UNENCRYPTED FILE ----- */
   unencryptedFileField: '~Unencrypted file, Required Format: .JSON, .CSV',
@@ -699,7 +699,7 @@ const settingsLocators = {
 
   languagePageLanguageField: '//android.widget.FrameLayout[@resource-id="android:id/content"]/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.widget.ScrollView/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[3]/android.widget.ScrollView/android.view.ViewGroup/android.view.ViewGroup[1]',
   languagePageLanguageFieldTitle: '//android.widget.TextView[@text="App Language"]',
-  languagePageLanguageFieldText: '//android.widget.TextView[@text="Select the language used throughout PearPass."]',
+  languagePageLanguageFieldText: '//android.widget.TextView[@text="Select the language used throughout Lockwright."]',
   languagePageLanguageFieldLanguageButton: '//android.view.ViewGroup[@resource-id="language-selector"]',
   languagePageLanguageFieldLanguageButtonText: '//android.widget.TextView[@text="English"]',
   languagePageLanguageFieldLanguageButtonIcon: '//android.view.ViewGroup[@resource-id="language-selector"]/com.horcrux.svg.SvgView',
@@ -752,11 +752,11 @@ Check here to see the Terms of Use and the Privacy Statement and visit our websi
   appVersionPageVersionFieldVersion: '//android.widget.TextView[@text="1.6.0"]',
 
   termsOfUse: '~Terms of Use',
-  termsOfUsePageTitle: '//android.widget.TextView[@text="PearPass Application Terms of Use"]',
+  termsOfUsePageTitle: '//android.widget.TextView[@text="Lockwright Application Terms of Use"]',
   privacyStatement: '~Privacy Statement',
-  privacyStatementPageTitle: '//android.widget.TextView[@text="PearPass Application Privacy Statement"]',
+  privacyStatementPageTitle: '//android.widget.TextView[@text="Lockwright Application Privacy Statement"]',
   visitOurWebsite: '~visit our website',
-  visitOurWebsitePageTitle: '//android.widget.TextView[@text="PearPass"]',
+  visitOurWebsitePageTitle: '//android.widget.TextView[@text="Lockwright"]',
   visitOurWebsitePageTitle1: '//android.widget.TextView[@text="Your Open-Source Password Manager"]',
 
   systemPickerMenuButton: '~Show roots',

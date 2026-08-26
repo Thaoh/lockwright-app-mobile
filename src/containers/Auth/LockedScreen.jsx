@@ -82,7 +82,7 @@ export const LockedScreen = () => {
         bounces={false}
       >
         <View style={styles.topSection}>
-          <PageHeader title={t`PearPass locked`} style={styles.header} />
+          <PageHeader title={t`Lockwright locked`} style={styles.header} />
 
           <View style={styles.descriptionBlock}>
             <Text

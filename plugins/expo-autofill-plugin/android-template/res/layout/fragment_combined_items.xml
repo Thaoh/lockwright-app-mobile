@@ -76,7 +76,7 @@
                         android:layout_weight="1"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:textAppearance="@style/TextAppearance.PearPass.LabelEmphasized"
+                        android:textAppearance="@style/TextAppearance.Lockwright.LabelEmphasized"
                         android:textColor="@color/pp_text_primary"
                         tools:text="Personal Vault" />
 
@@ -149,7 +149,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="top"
                 android:layout_marginTop="@dimen/pp_spacing_s16"
-                android:textAppearance="@style/TextAppearance.PearPass.Label"
+                android:textAppearance="@style/TextAppearance.Lockwright.Label"
                 android:textColor="@color/pp_text_secondary"
                 android:visibility="gone" />
 
@@ -177,7 +177,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="Unlock Vault"
-                    android:textAppearance="@style/TextAppearance.PearPass.BodyEmphasized"
+                    android:textAppearance="@style/TextAppearance.Lockwright.BodyEmphasized"
                     android:textColor="@color/pp_text_primary" />
 
                 <TextView
@@ -187,7 +187,7 @@
                     android:layout_marginTop="@dimen/pp_spacing_s8"
                     android:gravity="center"
                     android:text="Enter vault password to continue"
-                    android:textAppearance="@style/TextAppearance.PearPass.Label"
+                    android:textAppearance="@style/TextAppearance.Lockwright.Label"
                     android:textColor="@color/pp_text_secondary"
                     tools:text="Enter vault password to continue" />
 
@@ -206,7 +206,7 @@
 
                 <Button
                     android:id="@+id/combinedVaultPasswordContinue"
-                    style="@style/Button.PearPass.Primary"
+                    style="@style/Button.Lockwright.Primary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/pp_spacing_s16"

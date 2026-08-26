@@ -6,13 +6,13 @@ import { AutofillPluginOptions } from '../index';
 export const withIosPodfile: ConfigPlugin<AutofillPluginOptions> = (config, _options) => {
   return withDangerousMod(config, ['ios', async (cfg) => {
     const podfilePath = path.join(cfg.modRequest.platformProjectRoot, 'Podfile');
-    const projectName = cfg.modRequest.projectName || cfg.name || 'PearPass';
+    const projectName = cfg.modRequest.projectName || cfg.name || 'Lockwright';
     let podfile = await fs.promises.readFile(podfilePath, 'utf-8');
 
     // Check if extension target already exists
     const extensionTargetExists = podfile.includes("target 'PearPassAutoFillExtension'");
 
-    // Extension target must be NESTED inside the main PearPass target
+    // Extension target must be NESTED inside the main Lockwright target
     const extensionTarget = `
   target 'PearPassAutoFillExtension' do
     inherit! :search_paths

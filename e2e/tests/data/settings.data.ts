@@ -4,7 +4,7 @@
 
 export const APP_PREFERENCES_PAGE = {
   title: 'App Preferences',
-  subtitle: 'Control how PearPass works and keep your vault secure.',
+  subtitle: 'Control how Lockwright works and keep your vault secure.',
 
   autofillAndBrowsingSection: {
     title: 'Autofill & Browsing',
@@ -23,7 +23,7 @@ export const APP_PREFERENCES_PAGE = {
     title: 'Unlock Method',
     masterPassword: {
       title: 'Master Password',
-      description: 'Use your master password to unlock PearPass and decrypt your vault',
+      description: 'Use your master password to unlock Lockwright and decrypt your vault',
     },
     biometrics: {
       title: 'Biometrics',
@@ -71,7 +71,7 @@ export const MASTER_PASSWORD_PAGE = {
 
   changePasswordButton: 'Change Password',
 
-  autofillHint: '🔐 PearPass - Tap to unlock',
+  autofillHint: '🔐 Lockwright - Tap to unlock',
 
 
   passwordWarnings: {
@@ -127,7 +127,7 @@ export const BLIND_PEERING_PAGE = {
   },
   automaticBlindPeers: {
     title: 'Automatic Blind Peers',
-    description: 'Let PearPass allocate blind peers for you to handle syncing',
+    description: 'Let Lockwright allocate blind peers for you to handle syncing',
   },
   manualBlindPeers: {
     title: 'Manual Blind Peers',
@@ -149,7 +149,7 @@ export const LANGUAGE_PAGE = {
   description: 'Choose the language of the app.',
   languageField: {
     title: 'App Language',
-    text: 'Select the language used throughout PearPass.',
+    text: 'Select the language used throughout Lockwright.',
     selectedLanguage: 'English',
   },
   popup: {
@@ -159,15 +159,15 @@ export const LANGUAGE_PAGE = {
 } as const;
 
 export const TERMS_OF_USE_PAGE = {
-  title: 'PearPass Application Terms of Use',
+  title: 'Lockwright Application Terms of Use',
 } as const;
 
 export const PRIVACY_STATEMENT_PAGE = {
-  title: 'PearPass Application Privacy Statement',
+  title: 'Lockwright Application Privacy Statement',
 } as const;
 
 export const VISIT_OUR_WEBSITE_PAGE = {
-  title: 'PearPass',
+  title: 'Lockwright',
   tagline: 'Your Open-Source Password Manager',
 } as const;
 
@@ -332,7 +332,7 @@ export const IMPORT_ITEMS_PAGE = {
     importButtonText: 'Import',
   },
   unencryptedFile: {
-    fileName: 'PearPass_ytgiu_2025_12_02T10_41_25_523Z.json',
+    fileName: 'Lockwright_ytgiu_2025_12_02T10_41_25_523Z.json',
   },
   successToast: {
     vaultsImported: 'Vaults imported successfully!',
@@ -418,7 +418,7 @@ export const AUTO_LOCK_POPUP = {
 } as const;
 
 export const FINGERPRINT_POPUP = {
-  title: 'PearPass Nightly',
+  title: 'Lockwright Nightly',
 } as const;
 
 export const VERIFICATION_REQUIRED_POPUP = {

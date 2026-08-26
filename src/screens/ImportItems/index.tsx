@@ -122,9 +122,9 @@ const importOptions: ImportOption[] = [
     supportLink: 'https://proton.me/support/pass-export'
   },
   {
-    title: 'PearPass Encrypted File',
+    title: 'Lockwright Encrypted File',
     type: ImportOptionType.Encrypted,
-    description: t`Upload a PearPass-encrypted JSON export file. You will need the password used to encrypt the file.`,
+    description: t`Upload a Lockwright-encrypted JSON export file. You will need the password used to encrypt the file.`,
     testId: 'settings-import-encrypted',
     accepts: ['.json'],
     imgKey: 'encrypted',
@@ -132,9 +132,9 @@ const importOptions: ImportOption[] = [
       'https://docs.pass.pears.com/how-to-guides/how-to-export-your-vault/'
   },
   {
-    title: 'PearPass Unencrypted File',
+    title: 'Lockwright Unencrypted File',
     type: ImportOptionType.Unencrypted,
-    description: t`Upload an unencrypted PearPass export file in JSON or CSV format.`,
+    description: t`Upload an unencrypted Lockwright export file in JSON or CSV format.`,
     testId: 'settings-import-unencrypted',
     accepts: ['.json', '.csv'],
     imgKey: 'unencrypted',
@@ -301,7 +301,7 @@ export const ImportItems = () => {
       // Only a wrong-password failure is recoverable by re-entering the
       // password. The decrypt helpers signal this with "Incorrect password"
       // (Bitwarden / KeePass KDBX), an "InvalidKey" error, or "invalid
-      // password" (PearPass export worklet). Everything else — malformed
+      // password" (Lockwright export worklet). Everything else — malformed
       // file, unsupported KDF, a structural error, or a worklet/IPC failure
       // — is surfaced as-is so it isn't misattributed to a bad password.
       const message = error instanceof Error ? error.message : ''

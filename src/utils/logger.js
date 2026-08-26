@@ -172,7 +172,7 @@ export const shareAllLogs = async (metadata = {}) => {
 
   await Sharing.shareAsync(zipUri, {
     mimeType: 'application/zip',
-    dialogTitle: 'Share PearPass diagnostic logs'
+    dialogTitle: 'Share Lockwright diagnostic logs'
   })
   return { shared: true }
 }

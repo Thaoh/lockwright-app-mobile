@@ -23,4 +23,12 @@ describe("Lockwright app id", () => {
       "git+https://github.com/Thaoh/lockwright-lib-constants.git",
     );
   });
+
+  it("ships expo display name Lockwright, not PearPass", () => {
+    const app = JSON.parse(
+      readFileSync(path.resolve(__dirname, "../app.json"), "utf8"),
+    );
+    expect(app.expo.name).toBe("Lockwright");
+    expect(app.expo.name).not.toMatch(/PearPass/);
+  });
 });

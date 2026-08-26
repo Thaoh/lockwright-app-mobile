@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Button.PearPass.Base" parent="Widget.AppCompat.Button">
+    <style name="Button.Lockwright.Base" parent="Widget.AppCompat.Button">
         <item name="android:fontFamily">@font/pp_inter</item>
         <item name="android:textSize">@dimen/pp_font_s14</item>
         <item name="android:textFontWeight">500</item>
@@ -20,22 +20,22 @@
         <item name="android:maxWidth">350dp</item>
     </style>
 
-    <style name="Button.PearPass.Primary" parent="Button.PearPass.Base">
+    <style name="Button.Lockwright.Primary" parent="Button.Lockwright.Base">
         <item name="android:background">@drawable/pp_btn_primary</item>
         <item name="android:textColor">@color/pp_on_primary</item>
     </style>
 
-    <style name="Button.PearPass.Secondary" parent="Button.PearPass.Base">
+    <style name="Button.Lockwright.Secondary" parent="Button.Lockwright.Base">
         <item name="android:background">@drawable/pp_btn_secondary</item>
         <item name="android:textColor">@color/pp_text_primary</item>
     </style>
 
-    <style name="Button.PearPass.Tertiary" parent="Button.PearPass.Base">
+    <style name="Button.Lockwright.Tertiary" parent="Button.Lockwright.Base">
         <item name="android:background">@drawable/pp_btn_tertiary</item>
         <item name="android:textColor">@color/pp_primary</item>
     </style>
 
-    <style name="Button.PearPass.Destructive" parent="Button.PearPass.Base">
+    <style name="Button.Lockwright.Destructive" parent="Button.Lockwright.Base">
         <item name="android:background">@drawable/pp_btn_destructive</item>
         <item name="android:textColor">@color/pp_text_primary</item>
     </style>

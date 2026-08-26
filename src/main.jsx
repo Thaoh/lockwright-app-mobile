@@ -64,7 +64,7 @@ export const Main = () => {
         })
         setIsPearPassReady(true)
       } catch (error) {
-        logger.error('PearPass init failed:', error)
+        logger.error('Lockwright init failed:', error)
         setInitError(error)
         setIsPearPassReady(false)
         SplashScreen.hideAsync()
@@ -81,7 +81,7 @@ export const Main = () => {
         <GestureHandlerRootView style={styles.loadingScreen}>
           {initError ? (
             <>
-              <Text style={styles.errorTitle}>PearPass failed to start</Text>
+              <Text style={styles.errorTitle}>Lockwright failed to start</Text>
               <Text style={styles.errorMessage}>
                 {String(initError?.message || initError)}
               </Text>

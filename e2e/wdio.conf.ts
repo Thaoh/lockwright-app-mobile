@@ -106,7 +106,7 @@ function getVersion(p: string): string | undefined {
 }
 
 /**
- * Install PearPass (nightly by default) on the currently attached emulator
+ * Install Lockwright (nightly by default) on the currently attached emulator
  * if it is not already present. Runs once in `onPrepare`, before any
  * Appium session is created, so the `before` hook can assume the app
  * exists. Safe to call multiple times — if the package is already
@@ -114,13 +114,13 @@ function getVersion(p: string): string | undefined {
  *
  * Env overrides:
  *   - APP_PACKAGE  (default: works.dexterity.lockwright)
- *   - APP_APK      (default: apps/android/PearPass.apk)
+ *   - APP_APK      (default: apps/android/Lockwright.apk)
  */
 function ensureAppInstalled(): void {
   const appPackage = process.env.APP_PACKAGE || 'works.dexterity.lockwright';
   const apkPath = process.env.APP_APK
     ? path.resolve(process.env.APP_APK)
-    : path.resolve(__dirname, 'apps', 'android', 'PearPass.apk');
+    : path.resolve(__dirname, 'apps', 'android', 'Lockwright.apk');
 
   const isInstalled = (): boolean => {
     try {
@@ -142,7 +142,7 @@ function ensureAppInstalled(): void {
   if (!fs.existsSync(apkPath)) {
     throw new Error(
       `❌ ${appPackage} is not installed and APK was not found at ${apkPath}. ` +
-      `Set APP_APK to a valid path or place the APK at apps/android/PearPass.apk.`
+      `Set APP_APK to a valid path or place the APK at apps/android/Lockwright.apk.`
     );
   }
 
@@ -489,7 +489,7 @@ export const config: Options.Testrunner & {
             'appium:automationName': 'UiAutomator2',
             'appium:deviceName': process.env.EMULATOR_NAME || 'emulator-5554',
             'appium:platformVersion': process.env.EMULATOR_VERSION || '16',
-            // PearPass is launched manually in the `before` hook after
+            // Lockwright is launched manually in the `before` hook after
             // the phone-system fingerprint setup completes (see wdio.conf.ts).
             // Default package is `works.dexterity.lockwright`; override with APP_PACKAGE env var.
             // 'appium:appPackage': 'works.dexterity.lockwright',
@@ -555,7 +555,7 @@ export const config: Options.Testrunner & {
         ],
         ['ctrf-json', {
           outputDir: './ctrl',
-          appName: 'PearPass Mobile',
+          appName: 'Lockwright Mobile',
           appVersion: process.env.APP_VERSION || '1.1.1',
           osPlatform: PLATFORM,
         }],
@@ -564,7 +564,7 @@ export const config: Options.Testrunner & {
         'spec',
         ['ctrf-json', {
           outputDir: './ctrl',
-          appName: 'PearPass Mobile',
+          appName: 'Lockwright Mobile',
           appVersion: process.env.APP_VERSION || '1.1.1',
           osPlatform: PLATFORM,
         }],
@@ -608,7 +608,7 @@ export const config: Options.Testrunner & {
     const localPath =
       platformName === 'iOS'
         ? path.resolve(__dirname, 'apps/ios/YourApp.ipa')
-        : path.resolve(__dirname, 'apps/android/PearPass.apk');
+        : path.resolve(__dirname, 'apps/android/Lockwright.apk');
 
     const version = getVersion(localPath);
 
@@ -619,7 +619,7 @@ export const config: Options.Testrunner & {
   /**
    * One-off phone-system setup before the first test of the session.
    * Only runs for `local_emulator` where we need a fingerprint enrolled
-   * in Android Settings before launching PearPass. On any other target
+   * in Android Settings before launching Lockwright. On any other target
    * (BrowserStack, real device, iOS) this is a no-op.
    */
   async before() {

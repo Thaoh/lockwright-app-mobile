@@ -8,7 +8,7 @@ export const withIosAutofillModule: ConfigPlugin<AutofillPluginOptions> = (confi
   config = withDangerousMod(config, ['ios', async (cfg) => {
     const templateDir = path.join(__dirname, '../../ios-template/MainApp');
     const iosDir = cfg.modRequest.platformProjectRoot;
-    const projectName = cfg.modRequest.projectName || cfg.name || 'PearPass';
+    const projectName = cfg.modRequest.projectName || cfg.name || 'Lockwright';
     const projectDir = path.join(iosDir, projectName);
 
     // Copy AutofillModule.swift
@@ -31,11 +31,11 @@ export const withIosAutofillModule: ConfigPlugin<AutofillPluginOptions> = (confi
   // Add files to Xcode project
   config = withXcodeProject(config, (cfg) => {
     const project = cfg.modResults;
-    const projectName = cfg.modRequest.projectName || cfg.name || 'PearPass';
+    const projectName = cfg.modRequest.projectName || cfg.name || 'Lockwright';
     const projectGroup = project.findPBXGroupKey({ name: projectName });
 
     if (projectGroup) {
-      // Add Swift file - use full path since the PearPass group has no path attribute
+      // Add Swift file - use full path since the Lockwright group has no path attribute
       project.addSourceFile(
         `${projectName}/AutofillModule.swift`,
         { target: project.getFirstTarget().uuid },

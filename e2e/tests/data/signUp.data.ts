@@ -1,6 +1,6 @@
 export const CREATE_MASTER_PASSWORD_PAGE = {
   title: 'Create Master password',
-  description: 'This is the key to access PearPass. ',
+  description: 'This is the key to access Lockwright. ',
 
   passwordField: {
     title: 'Password',
@@ -14,8 +14,8 @@ export const CREATE_MASTER_PASSWORD_PAGE = {
   },
 
   termsOfUse: {
-    text: 'By clicking Continue, you confirm that you have read and agree to the PearPass Application Terms of Use.',
-    link: 'PearPass Application Terms of Use',
+    text: 'By clicking Continue, you confirm that you have read and agree to the Lockwright Application Terms of Use.',
+    link: 'Lockwright Application Terms of Use',
   },
 
   continueButton: 'Continue',
@@ -24,7 +24,7 @@ export const CREATE_MASTER_PASSWORD_PAGE = {
 export const TURN_ON_AUTOFILL_PAGE = {
   title: 'Faster, safer sign-ins',
   description:
-    "Allow autofill to sign in instantly on apps and websites. PearPass fills your credentials securely, so you don't need to remember, copy, or retype passwords.",
+    "Allow autofill to sign in instantly on apps and websites. Lockwright fills your credentials securely, so you don't need to remember, copy, or retype passwords.",
   turnOnAutofillButton: 'Turn on Autofill',
   notNowButton: 'Not now',
 } as const;
@@ -32,7 +32,7 @@ export const TURN_ON_AUTOFILL_PAGE = {
 export const PREFERED_SERVICES_PAGE = {
   title: 'Preferred service for passwords, passkeys & autofill',
   noneButton: 'None',
-  pearPassButton: 'PearPass Nightly',
+  pearPassButton: 'Lockwright Nightly',
   googleButton: {
     title: 'Google',
   },
@@ -41,7 +41,7 @@ export const PREFERED_SERVICES_PAGE = {
 export const UNLOCK_WITH_BIOMETRICS_PAGE = {
   title: 'Unlock faster with biometrics',
   description:
-    "Use your fingerprint or face to securely unlock PearPass and confirm actions. It's faster than entering your Master Password and works only with your approval.",
+    "Use your fingerprint or face to securely unlock Lockwright and confirm actions. It's faster than entering your Master Password and works only with your approval.",
   enableBiometricsButton: 'Enable biometrics',
   notNowButton: 'Not now',
 } as const;

@@ -104,7 +104,7 @@ export const AutofillScreen = () => {
                 style={styles.description}
                 data-testid="onboarding-autofill-description"
               >
-                {t`Allow autofill to sign in instantly on apps and websites. PearPass fills your credentials securely, so you don't need to remember, copy, or retype passwords.`}
+                {t`Allow autofill to sign in instantly on apps and websites. Lockwright fills your credentials securely, so you don't need to remember, copy, or retype passwords.`}
               </Text>
             </View>
           </View>

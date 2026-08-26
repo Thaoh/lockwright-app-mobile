@@ -14,7 +14,7 @@ export const downloadZip = async (files) => {
 
     const content = await zip.generateAsync({ type: 'base64' })
 
-    const filename = `PearPass_Export_${new Date()
+    const filename = `Lockwright_Export_${new Date()
       .toISOString()
       .replace(/[:.-]/g, '_')}.zip`
 

@@ -7,7 +7,7 @@ description: Use whenever creating or editing UI in this repo — React Native c
 
 # UI conventions for pearpass-app-mobile-tether
 
-This is the React Native + Expo mobile app for PearPass, written in JavaScript + TypeScript. UI is built on the shared component library `@tetherto/pearpass-lib-ui-kit`.
+This is the React Native + Expo mobile app for Lockwright, written in JavaScript + TypeScript. UI is built on the shared component library `@tetherto/pearpass-lib-ui-kit`.
 
 This document is for **anyone contributing UI** to the repo — new hires, current engineers, and AI coding assistants (Claude Code, Cursor, Codex, etc.). It captures the component catalog, styling conventions, and patterns we use when building UI in this app. Read it once before your first UI change; keep it open when you're in doubt.
 

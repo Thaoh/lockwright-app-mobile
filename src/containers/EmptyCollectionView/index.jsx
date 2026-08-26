@@ -58,7 +58,7 @@ export const EmptyCollectionView = ({ recordType = 'all' }) => {
 
     return {
       title: t`No item saved`,
-      description: t`Start using PearPass creating your first item or import your items from a different password manager`
+      description: t`Start using Lockwright creating your first item or import your items from a different password manager`
     }
   }, [isFavorites, isAllItems, categoryLabel, selectedFolder, t])
 

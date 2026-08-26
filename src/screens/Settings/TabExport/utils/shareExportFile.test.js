@@ -23,7 +23,7 @@ jest.mock('react-native', () => ({
 }))
 
 describe('shareExportFile', () => {
-  const filename = 'PearPass_Vault.json'
+  const filename = 'Lockwright_Vault.json'
   const content = '{"foo":"bar"}'
 
   beforeEach(() => {
@@ -76,7 +76,7 @@ describe('shareExportFile', () => {
       // extension stripped so SAF doesn't produce "file.json.json"
       expect(SAF.createFileAsync).toHaveBeenCalledWith(
         'content://tree/primary',
-        'PearPass_Vault',
+        'Lockwright_Vault',
         'application/json'
       )
       expect(FileSystem.writeAsStringAsync).toHaveBeenCalledWith(

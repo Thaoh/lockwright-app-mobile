@@ -48,7 +48,7 @@ describe('downloadZip', () => {
     expect(mockGenerateAsync).toHaveBeenCalledWith({ type: 'base64' })
 
     expect(shareExportFile).toHaveBeenCalledWith({
-      filename: expect.stringMatching(/PearPass_Export_.*\.zip/),
+      filename: expect.stringMatching(/Lockwright_Export_.*\.zip/),
       content: 'base64content',
       encoding: FileSystem.EncodingType.Base64,
       mimeType: 'application/zip'

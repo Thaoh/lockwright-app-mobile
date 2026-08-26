@@ -299,7 +299,7 @@ export const AppPreferences = () => {
     >
       <PageHeader
         title={t`App Preferences`}
-        subtitle={t`Control how PearPass works and keep your vault secure.`}
+        subtitle={t`Control how Lockwright works and keep your vault secure.`}
       />
 
       {/* Autofill & Browsing */}
@@ -368,7 +368,7 @@ export const AppPreferences = () => {
               checked
               disabled
               label={t`Master Password`}
-              description={t`Use your master password to unlock PearPass and decrypt your vault`}
+              description={t`Use your master password to unlock Lockwright and decrypt your vault`}
             />
           </View>
 
@@ -379,7 +379,7 @@ export const AppPreferences = () => {
                   checked={isPinEnabled}
                   onChange={handlePinToggle}
                   label={t`Pin Code`}
-                  description={t`Use a short PIN to quickly unlock PearPass on this device`}
+                  description={t`Use a short PIN to quickly unlock Lockwright on this device`}
                 />
                 {isPinEnabled && (
                   <ContextMenu

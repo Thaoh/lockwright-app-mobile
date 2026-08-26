@@ -25,7 +25,7 @@
         android:layout_centerInParent="true"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textAppearance="@style/TextAppearance.PearPass.LabelEmphasized"
+        android:textAppearance="@style/TextAppearance.Lockwright.LabelEmphasized"
         android:textColor="@color/pp_text_primary"
         tools:text="Add a passkey" />
 

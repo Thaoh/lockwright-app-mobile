@@ -243,7 +243,7 @@ export const CreatePassword = () => {
             <Text
               style={styles.boldText}
               testID="create-password-description"
-            >{t`The first thing to do is create a Master password to secure your account.  You'll use this password to access PearPass. `}</Text>
+            >{t`The first thing to do is create a Master password to secure your account.  You'll use this password to access Lockwright. `}</Text>
             <View style={styles.inputContainer}>
               <InputPasswordPearPass
                 testID="create-password-input"
@@ -316,7 +316,7 @@ export const CreatePassword = () => {
               <Text
                 style={styles.termsTitle}
                 testID="create-password-terms-title"
-              >{t`PearPass Terms of Use`}</Text>
+              >{t`Lockwright Terms of Use`}</Text>
 
               <View style={styles.checkboxContainer}>
                 <TouchableOpacity onPress={() => setAccepted(!accepted)}>
@@ -342,7 +342,7 @@ export const CreatePassword = () => {
                       onPress={handleTermsPress}
                       testID="create-password-terms-link"
                     >
-                      {t`PearPass Application Terms of Use`}
+                      {t`Lockwright Application Terms of Use`}
                     </Text>
                     .
                   </Text>

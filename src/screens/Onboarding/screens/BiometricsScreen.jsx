@@ -148,7 +148,7 @@ export const BiometricsScreen = () => {
                 style={styles.description}
                 data-testid="onboarding-biometrics-description"
               >
-                {t`Use your fingerprint or face to securely unlock PearPass and confirm actions. It's faster than entering your Master Password and works only with your approval.`}
+                {t`Use your fingerprint or face to securely unlock Lockwright and confirm actions. It's faster than entering your Master Password and works only with your approval.`}
               </Text>
             </View>
           </View>

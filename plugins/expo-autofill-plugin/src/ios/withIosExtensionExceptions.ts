@@ -20,7 +20,7 @@ export const withIosExtensionExceptions: ConfigPlugin<AutofillPluginOptions> = (
     async (cfg) => {
       const pbxprojPath = path.join(
         cfg.modRequest.platformProjectRoot,
-        'PearPass.xcodeproj',
+        'Lockwright.xcodeproj',
         'project.pbxproj'
       );
 

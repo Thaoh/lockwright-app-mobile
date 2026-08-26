@@ -7,7 +7,7 @@ export const withNativeClipboardIOS: ConfigPlugin = (config) => {
   config = withDangerousMod(config, ['ios', async (cfg) => {
     const templateDir = path.join(__dirname, '../../templates/ios');
     const iosDir = cfg.modRequest.platformProjectRoot;
-    const projectName = cfg.modRequest.projectName || cfg.name || 'PearPass';
+    const projectName = cfg.modRequest.projectName || cfg.name || 'Lockwright';
     const projectDir = path.join(iosDir, projectName);
 
     // Copy NativeClipboard.swift
@@ -26,7 +26,7 @@ export const withNativeClipboardIOS: ConfigPlugin = (config) => {
   // Add files to Xcode project
   config = withXcodeProject(config, (cfg) => {
     const project = cfg.modResults;
-    const projectName = cfg.modRequest.projectName || cfg.name || 'PearPass';
+    const projectName = cfg.modRequest.projectName || cfg.name || 'Lockwright';
     const projectGroup = project.findPBXGroupKey({ name: projectName });
 
     if (projectGroup) {

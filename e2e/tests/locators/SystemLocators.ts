@@ -13,9 +13,9 @@ const systemLocators = {
     nordPassCsvFile: '//android.widget.TextView[@resource-id="android:id/title" and @text="nordpass_2025-10-25 01_47_36 (1).csv"]',
     protonPassCsvFile: '//android.widget.TextView[@resource-id="android:id/title" and @text="Proton Pass_export_2025-12-17_1766000222.csv"]',
     protonPassJsonFile: '//android.widget.TextView[@text="Proton pass.json"]',
-    unencryptedFileCsvFile: '//android.widget.TextView[@text="PearPass_Reg_ios_10_11_1_2025_11_11T21_49_11_607Z.csv"]',
-    unencryptedFileJsonFile: '//android.widget.TextView[@text="PearPass_ytgiu_2025_12_02T10_41_25_523Z.json"]',
-    encryptedFileJsonFile: '//android.widget.TextView[@resource-id="android:id/title" and starts-with(@text, "PearPass_") and contains(@text, ".json")]',
+    unencryptedFileCsvFile: '//android.widget.TextView[@text="Lockwright_Reg_ios_10_11_1_2025_11_11T21_49_11_607Z.csv"]',
+    unencryptedFileJsonFile: '//android.widget.TextView[@text="Lockwright_ytgiu_2025_12_02T10_41_25_523Z.json"]',
+    encryptedFileJsonFile: '//android.widget.TextView[@resource-id="android:id/title" and starts-with(@text, "Lockwright_") and contains(@text, ".json")]',
 
     ownersManualFile: '//android.widget.TextView[@resource-id="android:id/title" and @text="owners-manual.pdf"]',
     largeFile: '//android.widget.TextView[@resource-id="android:id/title" and @text="LargeFile.pdf"]',

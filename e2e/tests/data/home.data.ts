@@ -2,7 +2,7 @@ export const HOME_PAGE = {
   noItemSaved: {
     title: 'No item saved',
     description:
-      'Start using PearPass creating your first item or import your items from a different password manager',
+      'Start using Lockwright creating your first item or import your items from a different password manager',
   },
   vaultTab: {
     text: 'Vault',

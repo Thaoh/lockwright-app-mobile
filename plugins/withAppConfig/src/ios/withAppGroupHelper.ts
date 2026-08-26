@@ -7,7 +7,7 @@ export const withAppGroupHelper: ConfigPlugin = (config) => {
   config = withDangerousMod(config, ['ios', async (cfg) => {
     const templateDir = path.join(__dirname, '../../templates/ios');
     const iosDir = cfg.modRequest.platformProjectRoot;
-    const projectName = cfg.modRequest.projectName || cfg.name || 'PearPass';
+    const projectName = cfg.modRequest.projectName || cfg.name || 'Lockwright';
     const projectDir = path.join(iosDir, projectName);
 
     // Get app group identifier from config
@@ -34,7 +34,7 @@ export const withAppGroupHelper: ConfigPlugin = (config) => {
   // Add files to Xcode project
   config = withXcodeProject(config, (cfg) => {
     const project = cfg.modResults;
-    const projectName = cfg.modRequest.projectName || cfg.name || 'PearPass';
+    const projectName = cfg.modRequest.projectName || cfg.name || 'Lockwright';
 
     // Find the main group
     const mainGroup = project.getFirstProject().firstProject.mainGroup;

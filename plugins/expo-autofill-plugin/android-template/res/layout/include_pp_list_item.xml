@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.PearPass.LabelEmphasized"
+            android:textAppearance="@style/TextAppearance.Lockwright.LabelEmphasized"
             android:textColor="@color/pp_text_primary"
             tools:text="Personal Vault" />
 
@@ -45,7 +45,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.PearPass.Label"
+            android:textAppearance="@style/TextAppearance.Lockwright.Label"
             android:textColor="@color/pp_text_secondary"
             android:visibility="gone"
             tools:text="subtitle"

@@ -1,7 +1,7 @@
 import { ConfigPlugin, withAndroidManifest as withAndroidManifestMod } from '@expo/config-plugins';
 import { AutofillPluginOptions } from '../index';
 
-const AUTOFILL_THEME = '@style/Theme.PearPass.Autofill.Fullscreen';
+const AUTOFILL_THEME = '@style/Theme.Lockwright.Autofill.Fullscreen';
 
 export const withAndroidManifest: ConfigPlugin<AutofillPluginOptions> = (config, _options) => {
   return withAndroidManifestMod(config, (cfg) => {
