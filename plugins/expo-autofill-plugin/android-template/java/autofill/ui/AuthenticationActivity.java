@@ -31,6 +31,8 @@ import com.pears.pass.autofill.data.PasskeyCredential;
 import com.pears.pass.autofill.data.PearPassVaultClient;
 import com.pears.pass.autofill.data.AutofillUnlockSession;
 import com.pears.pass.autofill.utils.AutofillConstants;
+import com.pears.pass.autofill.utils.IdentityFillPlan;
+import com.pears.pass.autofill.utils.LoginFillPlan;
 import com.pears.pass.autofill.utils.SecureLog;
 import com.pears.pass.autofill.utils.VaultInitializer;
 
@@ -39,6 +41,7 @@ import org.json.JSONObject;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -55,6 +58,13 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
     private AutofillId cardExpiryYearId;
     private AutofillId cardSecurityCodeId;
     private AutofillId cardholderNameId;
+    private AutofillId identityNameId;
+    private AutofillId identityPhoneId;
+    private AutofillId identityAddressId;
+    private AutofillId identityPostalId;
+    private AutofillId identityCityId;
+    private AutofillId identityRegionId;
+    private AutofillId identityCountryId;
     private String webDomain;
     private String packageName;
 
@@ -177,6 +187,13 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
         cardExpiryYearId = intent.getParcelableExtra(AutofillConstants.EXTRA_CARD_EXPIRY_YEAR_ID);
         cardSecurityCodeId = intent.getParcelableExtra(AutofillConstants.EXTRA_CARD_SECURITY_CODE_ID);
         cardholderNameId = intent.getParcelableExtra(AutofillConstants.EXTRA_CARDHOLDER_NAME_ID);
+        identityNameId = intent.getParcelableExtra(AutofillConstants.EXTRA_IDENTITY_NAME_ID);
+        identityPhoneId = intent.getParcelableExtra(AutofillConstants.EXTRA_IDENTITY_PHONE_ID);
+        identityAddressId = intent.getParcelableExtra(AutofillConstants.EXTRA_IDENTITY_ADDRESS_ID);
+        identityPostalId = intent.getParcelableExtra(AutofillConstants.EXTRA_IDENTITY_POSTAL_ID);
+        identityCityId = intent.getParcelableExtra(AutofillConstants.EXTRA_IDENTITY_CITY_ID);
+        identityRegionId = intent.getParcelableExtra(AutofillConstants.EXTRA_IDENTITY_REGION_ID);
+        identityCountryId = intent.getParcelableExtra(AutofillConstants.EXTRA_IDENTITY_COUNTRY_ID);
         ArrayList<AutofillId> extrasFallbacks =
                 intent.getParcelableArrayListExtra(AutofillConstants.EXTRA_FALLBACK_IDS);
         fallbackIds = extrasFallbacks != null ? extrasFallbacks : new ArrayList<>();
@@ -210,7 +227,12 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
 
     @Override
     public void navigateToVaultSelection() {
-        String recordType = hasCardFields() ? CredentialItem.TYPE_CREDIT_CARD : CredentialItem.TYPE_LOGIN;
+        String recordType = CredentialItem.TYPE_LOGIN;
+        if (hasCardFields()) {
+            recordType = CredentialItem.TYPE_CREDIT_CARD;
+        } else if (hasIdentityFields() && !hasLoginFields()) {
+            recordType = CredentialItem.TYPE_IDENTITY;
+        }
         replaceFragment(CombinedItemsFragment.newInstance(
                 CombinedItemsFragment.MODE_ASSERTION,
                 webDomain, packageName, null, null, recordType), true);
@@ -223,6 +245,23 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
                 || cardExpiryYearId != null
                 || cardSecurityCodeId != null
                 || cardholderNameId != null;
+    }
+
+    private boolean hasIdentityFields() {
+        return identityNameId != null
+                || identityPhoneId != null
+                || identityAddressId != null
+                || identityPostalId != null
+                || identityCityId != null
+                || identityRegionId != null
+                || identityCountryId != null;
+    }
+
+    private boolean hasLoginFields() {
+        return usernameId != null
+                || passwordId != null
+                || otpId != null
+                || (fallbackIds != null && !fallbackIds.isEmpty());
     }
 
     // 85% height sheet anchored to bottom, with a dim backdrop.
@@ -263,7 +302,25 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
 
     @Override
     public void onCredentialSelected(CredentialItem credential) {
-        // Build the autofill response
+        if (credential.isCreditCard() || credential.isIdentity()
+                || otpId == null || vaultClient == null) {
+            completeCredentialFill(credential);
+            return;
+        }
+        vaultClient.generateOtpCode(credential.getId()).whenComplete((code, error) -> {
+            if (error == null && code != null) {
+                credential.setOtpCode(code);
+            } else if (error != null) {
+                SecureLog.e(TAG, "OTP generate failed", error);
+            }
+            runOnUiThread(() -> completeCredentialFill(credential));
+        });
+    }
+
+    private void completeCredentialFill(CredentialItem credential) {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
         Dataset.Builder datasetBuilder = new Dataset.Builder();
 
         RemoteViews presentation = new RemoteViews(getPackageName(), android.R.layout.simple_list_item_1);
@@ -271,6 +328,8 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
 
         if (credential.isCreditCard()) {
             applyCardValues(datasetBuilder, credential, presentation);
+        } else if (credential.isIdentity()) {
+            applyIdentityValues(datasetBuilder, credential, presentation);
         } else {
             applyLoginValues(datasetBuilder, credential, presentation);
         }
@@ -299,42 +358,92 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
             CredentialItem credential,
             RemoteViews presentation
     ) {
-        boolean filledSpecific = false;
-        if (usernameId != null) {
-            datasetBuilder.setValue(
-                usernameId,
-                AutofillValue.forText(credential.getUsername()),
-                presentation
-            );
-            filledSpecific = true;
-        }
-
-        if (passwordId != null) {
-            datasetBuilder.setValue(
-                passwordId,
-                AutofillValue.forText(credential.getPassword()),
-                presentation
-            );
-            filledSpecific = true;
-        }
-
-        if (filledSpecific) return;
-
-        // AssistStructure was too sparse for classification (common on first
-        // keyboard focus). Fill username then password into leftover fields.
-        if (fallbackIds == null || fallbackIds.isEmpty()) return;
-        datasetBuilder.setValue(
-                fallbackIds.get(0),
-                AutofillValue.forText(credential.getUsername()),
-                presentation
+        Map<String, String> planned = LoginFillPlan.values(
+                usernameId != null,
+                passwordId != null,
+                otpId != null,
+                fallbackIds == null ? 0 : fallbackIds.size(),
+                credential.getUsername(),
+                credential.getPassword(),
+                credential.getOtpCode()
         );
-        if (fallbackIds.size() >= 2) {
+        if (planned.containsKey(LoginFillPlan.USERNAME) && usernameId != null) {
             datasetBuilder.setValue(
-                    fallbackIds.get(1),
-                    AutofillValue.forText(credential.getPassword()),
+                    usernameId,
+                    AutofillValue.forText(planned.get(LoginFillPlan.USERNAME)),
                     presentation
             );
         }
+        if (planned.containsKey(LoginFillPlan.PASSWORD) && passwordId != null) {
+            datasetBuilder.setValue(
+                    passwordId,
+                    AutofillValue.forText(planned.get(LoginFillPlan.PASSWORD)),
+                    presentation
+            );
+        }
+        if (planned.containsKey(LoginFillPlan.OTP) && otpId != null) {
+            datasetBuilder.setValue(
+                    otpId,
+                    AutofillValue.forText(planned.get(LoginFillPlan.OTP)),
+                    presentation
+            );
+        }
+        if (planned.containsKey(LoginFillPlan.FALLBACK_0) && fallbackIds != null && !fallbackIds.isEmpty()) {
+            datasetBuilder.setValue(
+                    fallbackIds.get(0),
+                    AutofillValue.forText(planned.get(LoginFillPlan.FALLBACK_0)),
+                    presentation
+            );
+        }
+        if (planned.containsKey(LoginFillPlan.FALLBACK_1) && fallbackIds != null && fallbackIds.size() >= 2) {
+            datasetBuilder.setValue(
+                    fallbackIds.get(1),
+                    AutofillValue.forText(planned.get(LoginFillPlan.FALLBACK_1)),
+                    presentation
+            );
+        }
+    }
+
+    private void applyIdentityValues(
+            Dataset.Builder datasetBuilder,
+            CredentialItem credential,
+            RemoteViews presentation
+    ) {
+        Map<String, String> planned = IdentityFillPlan.values(
+                identityNameId != null,
+                identityPhoneId != null,
+                identityAddressId != null,
+                identityPostalId != null,
+                identityCityId != null,
+                identityRegionId != null,
+                identityCountryId != null,
+                credential.getFullName(),
+                credential.getPhoneNumber(),
+                credential.getAddress(),
+                credential.getZip(),
+                credential.getCity(),
+                credential.getRegion(),
+                credential.getCountry()
+        );
+        setIdentityValue(datasetBuilder, identityNameId, planned.get(IdentityFillPlan.NAME), presentation);
+        setIdentityValue(datasetBuilder, identityPhoneId, planned.get(IdentityFillPlan.PHONE), presentation);
+        setIdentityValue(datasetBuilder, identityAddressId, planned.get(IdentityFillPlan.ADDRESS), presentation);
+        setIdentityValue(datasetBuilder, identityPostalId, planned.get(IdentityFillPlan.POSTAL), presentation);
+        setIdentityValue(datasetBuilder, identityCityId, planned.get(IdentityFillPlan.CITY), presentation);
+        setIdentityValue(datasetBuilder, identityRegionId, planned.get(IdentityFillPlan.REGION), presentation);
+        setIdentityValue(datasetBuilder, identityCountryId, planned.get(IdentityFillPlan.COUNTRY), presentation);
+    }
+
+    private static void setIdentityValue(
+            Dataset.Builder datasetBuilder,
+            AutofillId id,
+            String value,
+            RemoteViews presentation
+    ) {
+        if (id == null || value == null) {
+            return;
+        }
+        datasetBuilder.setValue(id, AutofillValue.forText(value), presentation);
     }
 
     private void applyCardValues(Dataset.Builder builder, CredentialItem credential, RemoteViews presentation) {

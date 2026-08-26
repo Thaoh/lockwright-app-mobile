@@ -61,7 +61,7 @@ public final class AutofillUnlockSession {
             expireLocked();
             List<CredentialItem> out = new ArrayList<>();
             for (CredentialItem item : credentials) {
-                if (item != null && !item.isCreditCard()) out.add(item);
+                if (item != null && !item.isCreditCard() && !item.isIdentity()) out.add(item);
             }
             return out;
         }
@@ -85,7 +85,7 @@ public final class AutofillUnlockSession {
             List<CredentialItem> matches = new ArrayList<>();
             List<Integer> ranks = new ArrayList<>();
             for (CredentialItem item : credentials) {
-                if (item == null || item.isCreditCard()) continue;
+                if (item == null || item.isCreditCard() || item.isIdentity()) continue;
                 int rank = 0;
                 if (pageUrl != null) {
                     rank = Math.max(rank, UriMatchHelper.getRecordSiteMatchRank(

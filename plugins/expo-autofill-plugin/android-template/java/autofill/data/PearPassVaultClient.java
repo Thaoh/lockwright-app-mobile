@@ -2,8 +2,11 @@ package com.pears.pass.autofill.data;
 
 import android.content.Context;
 
+import com.pears.pass.autofill.utils.OtpCodeResponse;
+import com.pears.pass.autofill.utils.RecordStoreKeys;
 import com.pears.pass.autofill.utils.SecureLog;
 import com.pears.pass.autofill.utils.UriMatchHelper;
+import com.pears.pass.autofill.utils.VaultMigrationGate;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -62,7 +65,9 @@ public class PearPassVaultClient {
         MASTER_PASSWORD_INIT_WITH_PASSWORD(44),
         MASTER_PASSWORD_UPDATE(45),
         MASTER_PASSWORD_INIT_WITH_CREDENTIALS(46),
-        SET_CORE_STORE_OPTIONS(49);
+        SET_CORE_STORE_OPTIONS(49),
+        GENERATE_OTP_CODES_BY_IDS(56),
+        GET_VAULT_MIGRATION_STATUS(82);
 
         private final int value;
 
@@ -301,7 +306,7 @@ public class PearPassVaultClient {
         try {
             message.put("command", command);
             if (data != null) {
-                message.put("data", new JSONObject(data));
+                message.put("data", requestDataToJson(data));
             }
             message.put("source", "android-extension");
         } catch (JSONException e) {
@@ -701,17 +706,75 @@ public class PearPassVaultClient {
     }
 
     /**
-     * Schema-2 canonical list. Falls back to v1 keys when the v2 namespace is
-     * empty (pre-migrate / old worklet).
+     * Schema-2 canonical list. Waits for migrate, then lists record-v2/.
+     * Falls back to v1 keys when the v2 namespace is empty (pre-migrate /
+     * old worklet).
      */
     public CompletableFuture<List<Map<String, Object>>> listCanonicalRecords() {
-        return activeVaultList("record-v2/").thenCompose(v2 -> {
-            if (v2 != null && !v2.isEmpty()) {
-                return CompletableFuture.completedFuture(v2);
-            }
-            log("record-v2/ empty; falling back to record/");
-            return activeVaultList("record/");
-        });
+        return waitForVaultMigration()
+                .thenCompose(v -> activeVaultList("record-v2/"))
+                .thenCompose(v2 -> {
+                    if (v2 != null && !v2.isEmpty()) {
+                        return CompletableFuture.completedFuture(v2);
+                    }
+                    log("record-v2/ empty; falling back to record/");
+                    return activeVaultList("record/");
+                });
+    }
+
+    /**
+     * Poll GET_VAULT_MIGRATION_STATUS until schema 2 is ready. Missing RPC
+     * (old worklet) fails open so v1 list still works.
+     */
+    CompletableFuture<Void> waitForVaultMigration() {
+        return pollVaultMigration(System.currentTimeMillis());
+    }
+
+    private CompletableFuture<Void> pollVaultMigration(long startedAt) {
+        return sendRequest(API.GET_VAULT_MIGRATION_STATUS.getValue(), null)
+                .thenApply(status -> new MigrationPoll(status, null))
+                .exceptionally(error -> new MigrationPoll(null, error))
+                .thenCompose(poll -> {
+                    if (poll.error != null) {
+                        log("migration status unavailable; listing without wait");
+                        return CompletableFuture.completedFuture(null);
+                    }
+                    VaultMigrationGate.Decision decision = VaultMigrationGate.decide(poll.status);
+                    if (decision == VaultMigrationGate.Decision.READY) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+                    if (decision == VaultMigrationGate.Decision.FAILED) {
+                        String message = VaultMigrationGate.errorMessage(
+                                poll.status != null ? poll.status.get("error") : null);
+                        CompletableFuture<Void> failed = new CompletableFuture<>();
+                        failed.completeExceptionally(new PearPassVaultException(
+                                message != null ? message : "Vault schema migration failed"));
+                        return failed;
+                    }
+                    if (VaultMigrationGate.timedOut(System.currentTimeMillis() - startedAt)) {
+                        CompletableFuture<Void> failed = new CompletableFuture<>();
+                        failed.completeExceptionally(new PearPassVaultException(
+                                "Timed out waiting for vault schema migration"));
+                        return failed;
+                    }
+                    return CompletableFuture.runAsync(() -> {
+                        try {
+                            Thread.sleep(VaultMigrationGate.POLL_MS);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }).thenCompose(v -> pollVaultMigration(startedAt));
+                });
+    }
+
+    private static final class MigrationPoll {
+        final Map<String, Object> status;
+        final Throwable error;
+
+        MigrationPoll(Map<String, Object> status, Throwable error) {
+            this.status = status;
+            this.error = error;
+        }
     }
 
     public CompletableFuture<Map<String, Object>> activeVaultGet(String key) {
@@ -1661,7 +1724,8 @@ public class PearPassVaultClient {
     public CompletableFuture<Void> activeVaultAddFile(String recordId, String fileId, byte[] buffer, String name) {
         log("Adding file '" + name + "' (" + buffer.length + " bytes) to record " + recordId);
 
-        String key = "record/" + recordId + "/file/" + fileId;
+        String key = RecordStoreKeys.fileKeyV2(recordId, fileId);
+        String v1Key = RecordStoreKeys.fileKeyV1(recordId, fileId);
 
         // Write file to a temp location so the Bare worklet can read it from disk
         // (avoids IPC size limits, matching iOS approach)
@@ -1676,12 +1740,18 @@ public class PearPassVaultClient {
             return failed;
         }
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("key", key);
-        params.put("filePath", tempFile.getAbsolutePath());
-        params.put("name", name);
+        Map<String, Object> v2Params = new HashMap<>();
+        v2Params.put("key", key);
+        v2Params.put("filePath", tempFile.getAbsolutePath());
+        v2Params.put("name", name);
 
-        return sendRequest(API.ACTIVE_VAULT_FILE_ADD.getValue(), params)
+        Map<String, Object> v1Params = new HashMap<>();
+        v1Params.put("key", v1Key);
+        v1Params.put("filePath", tempFile.getAbsolutePath());
+        v1Params.put("name", name);
+
+        return sendRequest(API.ACTIVE_VAULT_FILE_ADD.getValue(), v2Params)
+                .thenCompose(result -> sendRequest(API.ACTIVE_VAULT_FILE_ADD.getValue(), v1Params))
                 .thenAccept(result -> {
                     log("File '" + name + "' added successfully");
                     tempFile.delete();
@@ -1706,6 +1776,38 @@ public class PearPassVaultClient {
         params.put("data", data);
         return sendRequest(API.ACTIVE_VAULT_ADD.getValue(), params)
                 .thenAccept(result -> log("Added to active vault with key: " + key));
+    }
+
+    /**
+     * Current TOTP/HOTP code for a login that stores {@code data.otp}.
+     * Null when the record has no OTP or generation fails.
+     */
+    public CompletableFuture<String> generateOtpCode(String recordId) {
+        if (recordId == null || recordId.isEmpty()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        List<String> recordIds = new ArrayList<>();
+        recordIds.add(recordId);
+        return sendRequest(API.GENERATE_OTP_CODES_BY_IDS.getValue(), createMap("recordIds", recordIds))
+                .thenApply(result -> OtpCodeResponse.codeFor(result, recordId));
+    }
+
+    /**
+     * Canonical v2 write, then v1 projection. Same order as writeRecordDualStore in vault.
+     */
+    CompletableFuture<Void> writeRecordDualStore(Map<String, Object> record) {
+        Map<String, Object> v2 = RecordStoreKeys.toAppRecord(record);
+        Object idObj = v2.get("id");
+        if (!(idObj instanceof String) || ((String) idObj).isEmpty()) {
+            CompletableFuture<Void> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new IllegalArgumentException("record id required"));
+            return failed;
+        }
+        String id = (String) idObj;
+        return activeVaultAdd(RecordStoreKeys.recordKeyV2(id), v2)
+                .thenCompose(x -> activeVaultAdd(
+                        RecordStoreKeys.recordKeyV1(id),
+                        RecordStoreKeys.projectRecordToV1(v2)));
     }
 
     /**
@@ -1757,6 +1859,7 @@ public class PearPassVaultClient {
         recordData.put("credential", credential.toMap());
         recordData.put("note", note != null ? note : "");
         recordData.put("websites", formattedWebsites);
+        recordData.put("uris", RecordStoreKeys.deriveUrisFromWebsites(formattedWebsites, null));
         recordData.put("customFields", new ArrayList<>());
         recordData.put("attachments", attachmentMetadata != null ? attachmentMetadata : new ArrayList<>());
 
@@ -1772,8 +1875,7 @@ public class PearPassVaultClient {
         record.put("updatedAt", now);
         record.put("folder", folder);
 
-        String key = "record/" + recordId;
-        return activeVaultAdd(key, record)
+        return writeRecordDualStore(record)
                 .thenApply(v -> {
                     log("Passkey saved with ID: " + recordId);
                     return recordId;
@@ -1856,6 +1958,7 @@ public class PearPassVaultClient {
         updatedData.put("credential", credential.toMap());
         updatedData.put("note", note != null ? note : "");
         updatedData.put("websites", formattedWebsites);
+        updatedData.put("uris", RecordStoreKeys.deriveUrisFromWebsites(formattedWebsites, null));
         updatedData.put("customFields", existingData.get("customFields") != null ? existingData.get("customFields") : new ArrayList<>());
         updatedData.put("attachments", mergedAttachments);
 
@@ -1871,8 +1974,7 @@ public class PearPassVaultClient {
         updatedRecord.put("updatedAt", now);
         updatedRecord.put("folder", folder);
 
-        String key = "record/" + recordId;
-        return activeVaultAdd(key, updatedRecord)
+        return writeRecordDualStore(updatedRecord)
                 .thenApply(v -> {
                     log("Record " + recordId + " updated with passkey");
                     return recordId;
@@ -2060,6 +2162,19 @@ public class PearPassVaultClient {
         Map<String, Object> map = new HashMap<>();
         map.put(key, value);
         return map;
+    }
+
+    private static JSONObject requestDataToJson(Map<String, Object> data) throws JSONException {
+        JSONObject json = new JSONObject();
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            Object value = entry.getValue();
+            if (value instanceof List) {
+                json.put(entry.getKey(), new JSONArray((List<?>) value));
+            } else {
+                json.put(entry.getKey(), value);
+            }
+        }
+        return json;
     }
 
     private static Map<String, Object> jsonObjectToMap(JSONObject jsonObject) throws JSONException {

@@ -12,17 +12,14 @@ import android.view.autofill.AutofillId;
 import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class AutofillHelper {
     private static final String TAG = "AutofillHelper";
-
-    private static final String[] USERNAME_HINTS = {"email", "phone", "username", "user", "mobile", "login", "tel"};
-    private static final String[] PASSWORD_HINTS = {"password", "pswd", "pwd"};
-    private static final String[] OTP_HINTS = {"otp", "totp", "2fa", "mfa", "one-time", "onetime", "sms-code", "smscode", "verification", "one_time"};
-    private static final String[] IGNORED_HINTS = {"search", "find", "recipient", "edit"};
 
     private static final String[] CARD_NUMBER_KEYWORDS = {"cardnumber", "ccnumber", "cc-number", "card-number", "creditcard"};
     private static final String[] CARD_EXPIRY_KEYWORDS = {"expir", "exp-date", "cc-exp", "ccexp"};
@@ -41,9 +38,17 @@ public class AutofillHelper {
         private AutofillId cardExpiryYearId;
         private AutofillId cardSecurityCodeId;
         private AutofillId cardholderNameId;
+        private AutofillId identityNameId;
+        private AutofillId identityPhoneId;
+        private AutofillId identityAddressId;
+        private AutofillId identityPostalId;
+        private AutofillId identityCityId;
+        private AutofillId identityRegionId;
+        private AutofillId identityCountryId;
         private String packageName;
         private String webDomain;
         private final List<AutofillId> fallbackFieldIds = new ArrayList<>();
+        private final List<Visit> visits = new ArrayList<>();
 
         public boolean hasUsernameField() {
             return usernameId != null;
@@ -66,6 +71,16 @@ public class AutofillHelper {
             return otpId != null;
         }
 
+        public boolean hasIdentityField() {
+            return identityNameId != null
+                    || identityPhoneId != null
+                    || identityAddressId != null
+                    || identityPostalId != null
+                    || identityCityId != null
+                    || identityRegionId != null
+                    || identityCountryId != null;
+        }
+
         public AutofillId getUsernameId() {
             return usernameId;
         }
@@ -84,6 +99,13 @@ public class AutofillHelper {
         public AutofillId getCardExpiryYearId() { return cardExpiryYearId; }
         public AutofillId getCardSecurityCodeId() { return cardSecurityCodeId; }
         public AutofillId getCardholderNameId() { return cardholderNameId; }
+        public AutofillId getIdentityNameId() { return identityNameId; }
+        public AutofillId getIdentityPhoneId() { return identityPhoneId; }
+        public AutofillId getIdentityAddressId() { return identityAddressId; }
+        public AutofillId getIdentityPostalId() { return identityPostalId; }
+        public AutofillId getIdentityCityId() { return identityCityId; }
+        public AutofillId getIdentityRegionId() { return identityRegionId; }
+        public AutofillId getIdentityCountryId() { return identityCountryId; }
 
         public String getPackageName() {
             return packageName;
@@ -121,6 +143,13 @@ public class AutofillHelper {
             if (other.cardExpiryYearId != null) cardExpiryYearId = other.cardExpiryYearId;
             if (other.cardSecurityCodeId != null) cardSecurityCodeId = other.cardSecurityCodeId;
             if (other.cardholderNameId != null) cardholderNameId = other.cardholderNameId;
+            if (other.identityNameId != null) identityNameId = other.identityNameId;
+            if (other.identityPhoneId != null) identityPhoneId = other.identityPhoneId;
+            if (other.identityAddressId != null) identityAddressId = other.identityAddressId;
+            if (other.identityPostalId != null) identityPostalId = other.identityPostalId;
+            if (other.identityCityId != null) identityCityId = other.identityCityId;
+            if (other.identityRegionId != null) identityRegionId = other.identityRegionId;
+            if (other.identityCountryId != null) identityCountryId = other.identityCountryId;
             if (other.packageName != null && !other.packageName.isEmpty()) {
                 packageName = other.packageName;
             }
@@ -132,6 +161,7 @@ public class AutofillHelper {
                     fallbackFieldIds.add(id);
                 }
             }
+            visits.addAll(other.visits);
         }
 
         void pruneSpecificIdsFromFallbacks() {
@@ -144,12 +174,19 @@ public class AutofillHelper {
                             || Objects.equals(id, cardExpiryMonthId)
                             || Objects.equals(id, cardExpiryYearId)
                             || Objects.equals(id, cardSecurityCodeId)
-                            || Objects.equals(id, cardholderNameId));
+                            || Objects.equals(id, cardholderNameId)
+                            || Objects.equals(id, identityNameId)
+                            || Objects.equals(id, identityPhoneId)
+                            || Objects.equals(id, identityAddressId)
+                            || Objects.equals(id, identityPostalId)
+                            || Objects.equals(id, identityCityId)
+                            || Objects.equals(id, identityRegionId)
+                            || Objects.equals(id, identityCountryId));
         }
 
         public List<AutofillId> getFillTargetIds() {
             List<AutofillId> ids = new ArrayList<>();
-            boolean hasSpecific = hasUsernameField() || hasPasswordField() || hasOtpField() || hasCardField();
+            boolean hasSpecific = hasUsernameField() || hasPasswordField() || hasOtpField() || hasCardField() || hasIdentityField();
             if (hasSpecific) {
                 addIfNotNull(ids, usernameId);
                 addIfNotNull(ids, passwordId);
@@ -160,10 +197,45 @@ public class AutofillHelper {
                 addIfNotNull(ids, cardExpiryYearId);
                 addIfNotNull(ids, cardSecurityCodeId);
                 addIfNotNull(ids, cardholderNameId);
+                addIfNotNull(ids, identityNameId);
+                addIfNotNull(ids, identityPhoneId);
+                addIfNotNull(ids, identityAddressId);
+                addIfNotNull(ids, identityPostalId);
+                addIfNotNull(ids, identityCityId);
+                addIfNotNull(ids, identityRegionId);
+                addIfNotNull(ids, identityCountryId);
             } else {
                 ids.addAll(fallbackFieldIds);
             }
             return ids;
+        }
+
+        void applyPrecedingUsername() {
+            if (usernameId != null || passwordId == null) return;
+            List<FieldClassifier.OrderedField> order = new ArrayList<>();
+            Map<String, AutofillId> byKey = new HashMap<>();
+            for (int i = 0; i < visits.size(); i++) {
+                Visit v = visits.get(i);
+                String key = Integer.toString(i);
+                byKey.put(key, v.id);
+                order.add(new FieldClassifier.OrderedField(key, v.usernameCandidate, v.password));
+            }
+            String picked = FieldClassifier.pickPrecedingUsername(order);
+            if (picked != null) {
+                usernameId = byKey.get(picked);
+            }
+        }
+    }
+
+    private static final class Visit {
+        final AutofillId id;
+        final boolean usernameCandidate;
+        final boolean password;
+
+        Visit(AutofillId id, boolean usernameCandidate, boolean password) {
+            this.id = id;
+            this.usernameCandidate = usernameCandidate;
+            this.password = password;
         }
     }
 
@@ -190,6 +262,7 @@ public class AutofillHelper {
             parsedAny = true;
         }
         if (!parsedAny) return null;
+        merged.applyPrecedingUsername();
         merged.pruneSpecificIdsFromFallbacks();
         return merged;
     }
@@ -214,6 +287,7 @@ public class AutofillHelper {
             parseViewNode(rootViewNode, fields);
         }
 
+        fields.applyPrecedingUsername();
         return fields;
     }
 
@@ -226,6 +300,7 @@ public class AutofillHelper {
         int inputType = node.getInputType();
         AutofillId autofillId = node.getAutofillId();
         String webDomain = node.getWebDomain();
+        FieldSignals signals = fromNode(node, autofillHints, inputType);
 
         if (webDomain != null && fields.webDomain == null) {
             fields.webDomain = webDomain;
@@ -249,21 +324,34 @@ public class AutofillHelper {
         } else if (autofillId != null && isCardholderNameField(autofillHints, node) && fields.cardholderNameId == null) {
             fields.cardholderNameId = autofillId;
             SecureLog.d(TAG, "Found cardholder name field");
-        } else if (autofillId != null && isOtpField(autofillHints, inputType, node) && fields.otpId == null) {
+        } else if (autofillId != null && FieldClassifier.isOtp(signals) && fields.otpId == null) {
             fields.otpId = autofillId;
             SecureLog.d(TAG, "Found OTP field");
-        } else if (autofillId != null && isUsernameField(autofillHints, inputType, node) && fields.usernameId == null) {
+        } else if (autofillId != null && FieldClassifier.isUsername(signals) && fields.usernameId == null) {
             fields.usernameId = autofillId;
             SecureLog.d(TAG, "Found username field");
-        } else if (autofillId != null && isPasswordField(autofillHints, inputType, node) && fields.passwordId == null) {
+        } else if (autofillId != null && FieldClassifier.isPassword(signals) && fields.passwordId == null) {
             fields.passwordId = autofillId;
             SecureLog.d(TAG, "Found password field");
+        } else if (autofillId != null && FieldClassifier.isIdentity(signals)) {
+            assignIdentity(fields, FieldClassifier.identityKind(signals), autofillId);
+            SecureLog.d(TAG, "Found identity field");
         } else if (autofillId != null && isEditableTextField(inputType, node)) {
             // Collect any editable text field as a fallback target.
             // On first page load, browsers may not fully populate the AssistStructure
             // (missing HTML attributes, generic inputType), causing specific field detection
-            // to fail. These fallback IDs ensure we still show the PearPass suggestion.
+            // to fail. These fallback IDs ensure we still show the suggestion.
             fields.fallbackFieldIds.add(autofillId);
+        }
+
+        if (autofillId != null && (isEditableTextField(inputType, node)
+                || FieldClassifier.isPassword(signals)
+                || FieldClassifier.isUsername(signals))) {
+            fields.visits.add(new Visit(
+                    autofillId,
+                    FieldClassifier.isUsernameCandidate(signals) && !FieldClassifier.isPassword(signals),
+                    FieldClassifier.isPassword(signals)
+            ));
         }
 
         for (int i = 0; i < node.getChildCount(); i++) {
@@ -271,143 +359,55 @@ public class AutofillHelper {
         }
     }
 
-    private static boolean isUsernameField(String[] hints, int inputType, AssistStructure.ViewNode node) {
-        if (containsIgnoredHints(node)) {
-            return false;
-        }
-
-        // Check autofill hints
-        if (hints != null) {
-            for (String autofillHint : hints) {
-                if (autofillHint != null && containsAnyTerm(autofillHint.toLowerCase(), USERNAME_HINTS)) {
-                    return true;
-                }
-            }
-        }
-
-        // Check hint text
-        String hintText = node.getHint() != null ? node.getHint().toString().toLowerCase() : "";
-        if (containsAnyTerm(hintText, USERNAME_HINTS)) {
-            return true;
-        }
-
-        // Check field ID
-        String idEntry = node.getIdEntry();
-        String idEntryLower = idEntry != null ? idEntry.toLowerCase() : "";
-        if (containsAnyTerm(idEntryLower, USERNAME_HINTS)) {
-            return true;
-        }
-
-        // Check HTML info for web content
-        if (hasUsernameHtmlAttributes(node)) {
-            return true;
-        }
-
-        // Check inputType for web email variation, native email, and phone
-        int variation = inputType & InputType.TYPE_MASK_VARIATION;
-        int inputClass = inputType & InputType.TYPE_MASK_CLASS;
-        if (inputClass == InputType.TYPE_CLASS_PHONE) {
-            return true;
-        }
-        return variation == InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS
-                || variation == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+    static FieldSignals fromNode(AssistStructure.ViewNode node, String[] hints, int inputType) {
+        FieldSignals s = new FieldSignals();
+        s.autofillHints = hints != null ? hints : new String[0];
+        s.hintText = node.getHint() != null ? node.getHint().toString() : "";
+        s.idEntry = node.getIdEntry() != null ? node.getIdEntry() : "";
+        CharSequence desc = node.getContentDescription();
+        s.contentDescription = desc != null ? desc.toString() : "";
+        s.inputType = inputType;
+        s.htmlType = emptyIfNull(getHtmlAttributeValue(node, "type"));
+        s.htmlAutocomplete = emptyIfNull(getHtmlAttributeValue(node, "autocomplete"));
+        s.htmlName = emptyIfNull(getHtmlAttributeValue(node, "name"));
+        s.htmlClass = emptyIfNull(getHtmlAttributeValue(node, "class"));
+        s.htmlPlaceholder = emptyIfNull(getHtmlAttributeValue(node, "placeholder"));
+        s.htmlAriaLabel = emptyIfNull(getHtmlAttributeValue(node, "aria-label"));
+        s.htmlVisibleAttr = getHtmlAttributeValue(node, "visible") != null;
+        return s;
     }
 
-    private static boolean isOtpField(String[] hints, int inputType, AssistStructure.ViewNode node) {
-        if (containsIgnoredHints(node)) {
-            return false;
-        }
-        if (isPasswordField(hints, inputType, node) || isUsernameField(hints, inputType, node)) {
-            return false;
-        }
-
-        if (hints != null) {
-            for (String autofillHint : hints) {
-                if (autofillHint != null
-                        && (autofillHint.equalsIgnoreCase("smsOTPCode")
-                        || autofillHint.equalsIgnoreCase("sms_otp")
-                        || containsAnyTerm(autofillHint.toLowerCase(), OTP_HINTS))) {
-                    return true;
-                }
-            }
-        }
-
-        String hintText = node.getHint() != null ? node.getHint().toString().toLowerCase() : "";
-        if (containsAnyTerm(hintText, OTP_HINTS)) {
-            return true;
-        }
-
-        String idEntry = node.getIdEntry();
-        String idEntryLower = idEntry != null ? idEntry.toLowerCase() : "";
-        if (containsAnyTerm(idEntryLower, OTP_HINTS)) {
-            return true;
-        }
-
-        String autocomplete = getHtmlAttributeValue(node, "autocomplete");
-        if (autocomplete != null) {
-            String lower = autocomplete.toLowerCase();
-            if (lower.contains("one-time-code") || lower.contains("one_time_code")
-                    || containsAnyTerm(lower, OTP_HINTS)) {
-                return true;
-            }
-        }
-
-        String htmlType = getHtmlAttributeValue(node, "type");
-        if (htmlType != null && htmlType.equalsIgnoreCase("one-time-code")) {
-            return true;
-        }
-
-        String name = getHtmlAttributeValue(node, "name");
-        return name != null && containsAnyTerm(name.toLowerCase(), OTP_HINTS);
+    private static String emptyIfNull(String value) {
+        return value == null ? "" : value;
     }
 
-    private static boolean isPasswordField(String[] hints, int inputType, AssistStructure.ViewNode node) {
-        // Reject fields that are detected as username fields
-        if (isUsernameField(hints, inputType, node)) {
-            return false;
+    private static void assignIdentity(ParsedFields fields, String kind, AutofillId id) {
+        if (kind == null || id == null) return;
+        switch (kind) {
+            case "name":
+                if (fields.identityNameId == null) fields.identityNameId = id;
+                break;
+            case "phone":
+                if (fields.identityPhoneId == null) fields.identityPhoneId = id;
+                break;
+            case "address":
+                if (fields.identityAddressId == null) fields.identityAddressId = id;
+                break;
+            case "postal":
+                if (fields.identityPostalId == null) fields.identityPostalId = id;
+                break;
+            case "city":
+                if (fields.identityCityId == null) fields.identityCityId = id;
+                break;
+            case "region":
+                if (fields.identityRegionId == null) fields.identityRegionId = id;
+                break;
+            case "country":
+                if (fields.identityCountryId == null) fields.identityCountryId = id;
+                break;
+            default:
+                break;
         }
-
-        if (containsIgnoredHints(node)) {
-            return false;
-        }
-
-        // Check inputType for password variations
-        // Reject multi-line fields as they are likely text areas, not password fields
-        boolean hasPasswordVariation = (inputType & InputType.TYPE_TEXT_VARIATION_PASSWORD) != 0 ||
-            (inputType & InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) != 0 ||
-            (inputType & InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD) != 0;
-
-        if (hasPasswordVariation) {
-            boolean isMultiline = (inputType & InputType.TYPE_TEXT_FLAG_MULTI_LINE) != 0;
-            if (!isMultiline) {
-                return true;
-            }
-        }
-
-        // Check autofill hints
-        if (hints != null) {
-            for (String autofillHint : hints) {
-                if (autofillHint != null && containsAnyTerm(autofillHint.toLowerCase(), PASSWORD_HINTS)) {
-                    return true;
-                }
-            }
-        }
-
-        // Check hint text
-        String hintText = node.getHint() != null ? node.getHint().toString().toLowerCase() : "";
-        if (containsAnyTerm(hintText, PASSWORD_HINTS)) {
-            return true;
-        }
-
-        // Check field ID
-        String idEntry = node.getIdEntry();
-        String idEntryLower = idEntry != null ? idEntry.toLowerCase() : "";
-        if (containsAnyTerm(idEntryLower, PASSWORD_HINTS)) {
-            return true;
-        }
-
-        // Check HTML info for web content
-        return hasPasswordHtmlAttributes(node);
     }
 
     private static boolean matchesCardSignal(String[] hints, AssistStructure.ViewNode node,
@@ -497,18 +497,17 @@ public class AutofillHelper {
     }
 
     /**
-     * Check if the node contains any ignored hint terms.
+     * Get an HTML attribute value by name from the attributes list.
      */
-    private static boolean containsIgnoredHints(AssistStructure.ViewNode node) {
-        String hintText = node.getHint() != null ? node.getHint().toString().toLowerCase() : "";
-        String idEntry = node.getIdEntry() != null ? node.getIdEntry().toLowerCase() : "";
-
-        return containsAnyTerm(hintText, IGNORED_HINTS) || containsAnyTerm(idEntry, IGNORED_HINTS);
+    private static String getHtmlAttribute(List<Pair<String, String>> attributes, String name) {
+        for (Pair<String, String> attr : attributes) {
+            if (name.equalsIgnoreCase(attr.first)) {
+                return attr.second;
+            }
+        }
+        return null;
     }
 
-    /**
-     * Check if the text contains any of the terms in the array.
-     */
     private static boolean containsAnyTerm(String text, String[] terms) {
         if (text == null || text.isEmpty()) {
             return false;
@@ -522,92 +521,12 @@ public class AutofillHelper {
     }
 
     /**
-     * Check if the node's HTML attributes indicate a username/email field.
-     * Inspects type, autocomplete, and name attributes.
-     */
-    private static boolean hasUsernameHtmlAttributes(AssistStructure.ViewNode node) {
-        ViewStructure.HtmlInfo htmlInfo = node.getHtmlInfo();
-        if (htmlInfo == null) {
-            return false;
-        }
-
-        List<Pair<String, String>> attributes = htmlInfo.getAttributes();
-        if (attributes == null) {
-            return false;
-        }
-
-        String htmlInputType = getHtmlAttribute(attributes, "type");
-        if (htmlInputType != null) {
-            String htmlInputTypeLower = htmlInputType.toLowerCase();
-            if (htmlInputTypeLower.equals("email") || htmlInputTypeLower.equals("tel")) {
-                return true;
-            }
-        }
-
-        String autocomplete = getHtmlAttribute(attributes, "autocomplete");
-        if (autocomplete != null && containsAnyTerm(autocomplete.toLowerCase(), USERNAME_HINTS)) {
-            return true;
-        }
-
-        String name = getHtmlAttribute(attributes, "name");
-        if (name != null && containsAnyTerm(name.toLowerCase(), USERNAME_HINTS)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if the node's HTML attributes indicate a password field.
-     * Inspects type, autocomplete, and name attributes.
-     */
-    private static boolean hasPasswordHtmlAttributes(AssistStructure.ViewNode node) {
-        ViewStructure.HtmlInfo htmlInfo = node.getHtmlInfo();
-        if (htmlInfo == null) {
-            return false;
-        }
-
-        List<Pair<String, String>> attributes = htmlInfo.getAttributes();
-        if (attributes == null) {
-            return false;
-        }
-
-        String htmlInputType = getHtmlAttribute(attributes, "type");
-        if (htmlInputType != null && htmlInputType.equalsIgnoreCase("password")) {
-            return true;
-        }
-
-        String autocomplete = getHtmlAttribute(attributes, "autocomplete");
-        if (autocomplete != null && containsAnyTerm(autocomplete.toLowerCase(), PASSWORD_HINTS)) {
-            return true;
-        }
-
-        String name = getHtmlAttribute(attributes, "name");
-        if (name != null && containsAnyTerm(name.toLowerCase(), PASSWORD_HINTS)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Get an HTML attribute value by name from the attributes list.
-     */
-    private static String getHtmlAttribute(List<Pair<String, String>> attributes, String name) {
-        for (Pair<String, String> attr : attributes) {
-            if (name.equalsIgnoreCase(attr.first)) {
-                return attr.second;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Check if a node is an editable single-line text field (potential fill target).
      * Used as fallback when specific username/password detection fails.
      */
     private static boolean isEditableTextField(int inputType, AssistStructure.ViewNode node) {
-        if (containsIgnoredHints(node)) {
+        FieldSignals signals = fromNode(node, node.getAutofillHints(), inputType);
+        if (FieldClassifier.isIgnored(signals)) {
             return false;
         }
 

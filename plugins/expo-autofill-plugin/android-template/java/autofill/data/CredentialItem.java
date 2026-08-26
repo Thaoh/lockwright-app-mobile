@@ -9,6 +9,7 @@ import com.pears.pass.autofill.utils.UriMatchHelper;
 public class CredentialItem {
     public static final String TYPE_LOGIN = "login";
     public static final String TYPE_CREDIT_CARD = "creditCard";
+    public static final String TYPE_IDENTITY = "identity";
 
     private String id;
     private String recordType = TYPE_LOGIN;
@@ -26,6 +27,15 @@ public class CredentialItem {
     private String cardSecurityCode;
     private String cardholderName;
 
+    // Identity fields
+    private String fullName;
+    private String phoneNumber;
+    private String address;
+    private String zip;
+    private String city;
+    private String region;
+    private String country;
+
     // Passkey fields
     private boolean hasPasskey;
     private long passkeyCreatedAt;
@@ -33,6 +43,7 @@ public class CredentialItem {
     private String privateKeyBuffer;  // Base64URL-encoded PKCS#8
     private String userId;            // Base64URL user ID
     private String credentialId;      // Base64URL credential ID
+    private String otpCode;
 
     public CredentialItem(String id, String title, String username, String password) {
         this.id = id;
@@ -151,6 +162,10 @@ public class CredentialItem {
         return TYPE_CREDIT_CARD.equals(recordType);
     }
 
+    public boolean isIdentity() {
+        return TYPE_IDENTITY.equals(recordType);
+    }
+
     public String getCardNumber() { return cardNumber; }
     public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
 
@@ -162,6 +177,27 @@ public class CredentialItem {
 
     public String getCardholderName() { return cardholderName; }
     public void setCardholderName(String cardholderName) { this.cardholderName = cardholderName; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public String getZip() { return zip; }
+    public void setZip(String zip) { this.zip = zip; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public String getRegion() { return region; }
+    public void setRegion(String region) { this.region = region; }
+
+    public String getCountry() { return country; }
+    public void setCountry(String country) { this.country = country; }
 
     // Passkey getters and setters
 
@@ -211,6 +247,14 @@ public class CredentialItem {
 
     public void setCredentialId(String credentialId) {
         this.credentialId = credentialId;
+    }
+
+    public String getOtpCode() {
+        return otpCode;
+    }
+
+    public void setOtpCode(String otpCode) {
+        this.otpCode = otpCode;
     }
 
     /**

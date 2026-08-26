@@ -215,11 +215,21 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
     }
 
     private void setupHeader() {
-        sheetTitle.setText(MODE_REGISTRATION.equals(mode) ? "Create Passkey" : "Select Login");
+        sheetTitle.setText(MODE_REGISTRATION.equals(mode) ? "Create Passkey" : sheetTitleForFilter());
         sheetClose.setOnClickListener(v -> {
             if (navigationListener != null) navigationListener.onCancel();
         });
         searchInput.setHint("Search in All Items");
+    }
+
+    private String sheetTitleForFilter() {
+        if (CredentialItem.TYPE_CREDIT_CARD.equals(recordTypeFilter)) {
+            return "Select Card";
+        }
+        if (CredentialItem.TYPE_IDENTITY.equals(recordTypeFilter)) {
+            return "Select Identity";
+        }
+        return "Select Login";
     }
 
     private void setupSearch() {
@@ -509,7 +519,8 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
 
     private List<CredentialItem> filterInitial(List<CredentialItem> all) {
         // Credit cards don't carry a website list, so they aren't domain-filterable.
-        if (CredentialItem.TYPE_CREDIT_CARD.equals(recordTypeFilter)) {
+        if (CredentialItem.TYPE_CREDIT_CARD.equals(recordTypeFilter)
+                || CredentialItem.TYPE_IDENTITY.equals(recordTypeFilter)) {
             return new ArrayList<>(all);
         }
         // In registration mode, prefer records matching rpId/userName; else fall through.
@@ -651,6 +662,9 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
         } else if (CredentialItem.TYPE_CREDIT_CARD.equals(recordTypeFilter)) {
             emptyState.setText("No credit cards in this vault");
             emptyState.setMovementMethod(null);
+        } else if (CredentialItem.TYPE_IDENTITY.equals(recordTypeFilter)) {
+            emptyState.setText("No identities in this vault");
+            emptyState.setMovementMethod(null);
         } else {
             emptyState.setText("No matching items in this vault");
             emptyState.setMovementMethod(null);
@@ -708,6 +722,21 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
                 cardItem.setCardSecurityCode((String) data.get("securityCode"));
                 cardItem.setCardholderName((String) data.get("name"));
                 credentials.add(cardItem);
+                rawRecordsById.put(id, record);
+                continue;
+            }
+
+            if (CredentialItem.TYPE_IDENTITY.equals(recordTypeFilter)) {
+                CredentialItem identityItem = new CredentialItem(id, name, "", "");
+                identityItem.setRecordType(CredentialItem.TYPE_IDENTITY);
+                identityItem.setFullName((String) data.get("fullName"));
+                identityItem.setPhoneNumber((String) data.get("phoneNumber"));
+                identityItem.setAddress((String) data.get("address"));
+                identityItem.setZip((String) data.get("zip"));
+                identityItem.setCity((String) data.get("city"));
+                identityItem.setRegion((String) data.get("region"));
+                identityItem.setCountry((String) data.get("country"));
+                credentials.add(identityItem);
                 rawRecordsById.put(id, record);
                 continue;
             }

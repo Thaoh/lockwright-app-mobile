@@ -31,10 +31,12 @@ import com.pears.pass.autofill.data.CredentialItem;
 import com.pears.pass.autofill.ui.AuthenticationActivity;
 import com.pears.pass.autofill.utils.AutofillConstants;
 import com.pears.pass.autofill.utils.AutofillHelper;
+import com.pears.pass.autofill.utils.LoginFillPlan;
 import com.pears.pass.autofill.utils.SecureLog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class PearPassAutofillService extends AutofillService {
@@ -51,7 +53,8 @@ public class PearPassAutofillService extends AutofillService {
 
             boolean hasSpecificFields = parsedFields.hasUsernameField()
                     || parsedFields.hasPasswordField()
-                    || parsedFields.hasOtpField();
+                    || parsedFields.hasOtpField()
+                    || parsedFields.hasIdentityField();
             boolean hasCardFields = parsedFields.hasCardField();
             boolean hasFallbackFields = parsedFields.hasAnyFallbackField();
 
@@ -67,7 +70,11 @@ public class PearPassAutofillService extends AutofillService {
             }
 
             AutofillUnlockSession session = AutofillUnlockSession.get();
-            if (session.isUnlocked() && !hasCardFields) {
+            boolean identityOnly = parsedFields.hasIdentityField()
+                    && !parsedFields.hasUsernameField()
+                    && !parsedFields.hasPasswordField()
+                    && !parsedFields.hasOtpField();
+            if (session.isUnlocked() && !hasCardFields && !identityOnly) {
                 session.touch();
                 FillResponse unlocked = buildUnlockedResponse(request, parsedFields, targetIds);
                 if (unlocked != null) {
@@ -205,27 +212,38 @@ public class PearPassAutofillService extends AutofillService {
             RemoteViews presentation,
             @Nullable InlinePresentation inlinePresentation
     ) {
-        boolean filledSpecific = false;
-        if (parsedFields.getUsernameId() != null) {
+        Map<String, String> planned = LoginFillPlan.values(
+                parsedFields.getUsernameId() != null,
+                parsedFields.getPasswordId() != null,
+                parsedFields.getOtpId() != null,
+                parsedFields.getFallbackFieldIds() != null
+                        ? parsedFields.getFallbackFieldIds().size() : 0,
+                credential.getUsername(),
+                credential.getPassword(),
+                credential.getOtpCode()
+        );
+        if (planned.containsKey(LoginFillPlan.USERNAME) && parsedFields.getUsernameId() != null) {
             setDatasetValue(datasetBuilder, parsedFields.getUsernameId(),
-                    nullToEmpty(credential.getUsername()), presentation, inlinePresentation);
-            filledSpecific = true;
+                    planned.get(LoginFillPlan.USERNAME), presentation, inlinePresentation);
         }
-        if (parsedFields.getPasswordId() != null) {
+        if (planned.containsKey(LoginFillPlan.PASSWORD) && parsedFields.getPasswordId() != null) {
             setDatasetValue(datasetBuilder, parsedFields.getPasswordId(),
-                    nullToEmpty(credential.getPassword()), presentation, inlinePresentation);
-            filledSpecific = true;
+                    planned.get(LoginFillPlan.PASSWORD), presentation, inlinePresentation);
         }
-        if (filledSpecific) return;
-
+        if (planned.containsKey(LoginFillPlan.OTP) && parsedFields.getOtpId() != null) {
+            setDatasetValue(datasetBuilder, parsedFields.getOtpId(),
+                    planned.get(LoginFillPlan.OTP), presentation, inlinePresentation);
+        }
         List<AutofillId> fallbacks = parsedFields.getFallbackFieldIds();
-        if (fallbacks != null && !fallbacks.isEmpty()) {
+        if (planned.containsKey(LoginFillPlan.FALLBACK_0) && fallbacks != null && !fallbacks.isEmpty()) {
             setDatasetValue(datasetBuilder, fallbacks.get(0),
-                    nullToEmpty(credential.getUsername()), presentation, inlinePresentation);
-            if (fallbacks.size() >= 2) {
-                setDatasetValue(datasetBuilder, fallbacks.get(1),
-                        nullToEmpty(credential.getPassword()), presentation, inlinePresentation);
-            }
+                    planned.get(LoginFillPlan.FALLBACK_0), presentation, inlinePresentation);
+        }
+        if (planned.containsKey(LoginFillPlan.FALLBACK_1) && fallbacks != null && fallbacks.size() >= 2) {
+            setDatasetValue(datasetBuilder, fallbacks.get(1),
+                    planned.get(LoginFillPlan.FALLBACK_1), presentation, inlinePresentation);
+        }
+        if (!planned.isEmpty()) {
             return;
         }
 
@@ -326,7 +344,8 @@ public class PearPassAutofillService extends AutofillService {
         return parsedFields.hasUsernameField()
                 || parsedFields.hasPasswordField()
                 || parsedFields.hasOtpField()
-                || parsedFields.hasCardField();
+                || parsedFields.hasCardField()
+                || parsedFields.hasIdentityField();
     }
 
     private int pendingIntentFlags() {
@@ -347,6 +366,13 @@ public class PearPassAutofillService extends AutofillService {
         authIntent.putExtra(AutofillConstants.EXTRA_CARD_EXPIRY_YEAR_ID, parsedFields.getCardExpiryYearId());
         authIntent.putExtra(AutofillConstants.EXTRA_CARD_SECURITY_CODE_ID, parsedFields.getCardSecurityCodeId());
         authIntent.putExtra(AutofillConstants.EXTRA_CARDHOLDER_NAME_ID, parsedFields.getCardholderNameId());
+        authIntent.putExtra(AutofillConstants.EXTRA_IDENTITY_NAME_ID, parsedFields.getIdentityNameId());
+        authIntent.putExtra(AutofillConstants.EXTRA_IDENTITY_PHONE_ID, parsedFields.getIdentityPhoneId());
+        authIntent.putExtra(AutofillConstants.EXTRA_IDENTITY_ADDRESS_ID, parsedFields.getIdentityAddressId());
+        authIntent.putExtra(AutofillConstants.EXTRA_IDENTITY_POSTAL_ID, parsedFields.getIdentityPostalId());
+        authIntent.putExtra(AutofillConstants.EXTRA_IDENTITY_CITY_ID, parsedFields.getIdentityCityId());
+        authIntent.putExtra(AutofillConstants.EXTRA_IDENTITY_REGION_ID, parsedFields.getIdentityRegionId());
+        authIntent.putExtra(AutofillConstants.EXTRA_IDENTITY_COUNTRY_ID, parsedFields.getIdentityCountryId());
         authIntent.putParcelableArrayListExtra(
                 AutofillConstants.EXTRA_FALLBACK_IDS,
                 new ArrayList<>(parsedFields.getFallbackFieldIds())
