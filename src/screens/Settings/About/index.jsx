@@ -15,9 +15,9 @@ import {
 } from '@tetherto/pearpass-lib-ui-kit'
 import { Linking, StyleSheet, View } from 'react-native'
 
-import { version } from '../../../../package.json'
 import { Layout } from '../../../containers/Layout'
 import { BackScreenHeader } from '../../../containers/ScreenHeader/BackScreenHeader'
+import { getDisplayVersion } from '../../../utils/appDisplayVersion'
 
 export const About = () => {
   const { t } = useLingui()
@@ -82,7 +82,7 @@ export const About = () => {
           size="big"
           additionalItems={
             <Text variant="label" color={theme.colors.colorPrimary}>
-              {version}
+              {getDisplayVersion()}
             </Text>
           }
         />

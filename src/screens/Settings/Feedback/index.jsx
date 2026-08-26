@@ -23,13 +23,13 @@ import Toast from 'react-native-toast-message'
 import { Layout } from 'src/containers/Layout'
 import { BackScreenHeader } from 'src/containers/ScreenHeader/BackScreenHeader'
 
-import { version } from '../../../../package.json'
 import {
   GOOGLE_FORM_KEY,
   GOOGLE_FORM_MAPPING,
   SLACK_WEBHOOK_URL_PATH
 } from '../../../constants/feedback'
 import { useAutoLockContext } from '../../../context/AutoLockContext'
+import { getDisplayVersion } from '../../../utils/appDisplayVersion'
 import { logger } from '../../../utils/logger'
 
 const isEmailSupported = false
@@ -57,7 +57,7 @@ export const Feedback = () => {
         app: 'MOBILE',
         operatingSystem: Platform.OS,
         deviceModel: Platform.constants.Brand,
-        appVersion: version
+        appVersion: getDisplayVersion()
       }
 
       const slackResult = await sendSlackFeedback({

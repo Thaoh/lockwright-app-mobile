@@ -13,9 +13,9 @@ import {
 import { Platform, StyleSheet, View } from 'react-native'
 import Toast from 'react-native-toast-message'
 
-import { version } from '../../../../package.json'
 import { Layout } from '../../../containers/Layout'
 import { BackScreenHeader } from '../../../containers/ScreenHeader/BackScreenHeader'
+import { getDisplayVersion } from '../../../utils/appDisplayVersion'
 import { useLogLevel } from '../../../utils/logConfigurationStorage'
 import { getLogFileStats, shareAllLogs } from '../../../utils/logger'
 
@@ -52,7 +52,7 @@ export const Diagnostics = () => {
     setIsSharing(true)
     try {
       const result = await shareAllLogs({
-        appVersion: version,
+        appVersion: getDisplayVersion(),
         platform: Platform.OS,
         platformVersion: String(Platform.Version ?? ''),
         deviceModel: Platform.constants?.Brand ?? 'unknown',
