@@ -145,8 +145,6 @@ pnpm run bundle-bare
 PEARPASS_DISTRIBUTION=fdroid npx expo prebuild --platform android --clean
 ```
 
-The env var is still `PEARPASS_DISTRIBUTION` until identity lands.
-
 More details:
 
 - [`docs/fdroid/build.md`](docs/fdroid/build.md)
@@ -209,7 +207,7 @@ Logging is off by default. When enabled, logs are written to the app's cache dir
 Two ways to enable:
 
 - **In-app toggle** (Settings → Diagnostics → **Enable logs**). Persists across launches. Toggling off stops writes but keeps existing log files; toggling back on resumes appending to the same files, so a session can span multiple toggles.
-- **Nightly builds** (`PearPass-nightly`): logging defaults to `debug` on first launch so testers don't have to opt in. The toggle still works to disable it. Channel name is still PearPass until identity lands.
+- **Nightly builds** (`PearPass-nightly`): logging defaults to `debug` on first launch so testers don't have to opt in. The toggle still works to disable it.
 
 Logs can be shared via the Diagnostics screen **Share logs** action, which zips both files plus a small metadata file (app version, distribution channel).
 
