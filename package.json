@@ -64,7 +64,7 @@
     "@tetherto/pear-apps-utils-pattern-search": "git+https://github.com/tetherto/pear-apps-utils-pattern-search.git",
     "@tetherto/pear-apps-utils-qr": "git+https://github.com/tetherto/pear-apps-utils-qr.git",
     "@tetherto/pear-apps-utils-validator": "git+https://github.com/tetherto/pear-apps-utils-validator.git",
-    "@tetherto/pearpass-lib-constants": "git+https://github.com/tetherto/pearpass-lib-constants.git",
+    "@tetherto/pearpass-lib-constants": "git+https://github.com/Thaoh/lockwright-lib-constants.git",
     "@tetherto/pearpass-lib-data-export": "git+https://github.com/tetherto/pearpass-lib-data-export.git",
     "@tetherto/pearpass-lib-data-import": "git+https://github.com/tetherto/pearpass-lib-data-import.git",
     "@tetherto/pearpass-lib-ui-kit": "git+https://github.com/tetherto/pearpass-lib-ui-react-native-components.git#design-system-v2",

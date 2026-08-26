@@ -203,6 +203,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@tetherto/pearpass-lib-constants': git+https://github.com/Thaoh/lockwright-lib-constants.git
+
 importers:
 
   .:
@@ -274,8 +277,8 @@ importers:
         specifier: git+https://github.com/tetherto/pear-apps-utils-validator.git
         version: https://codeload.github.com/tetherto/pear-apps-utils-validator/tar.gz/bf6b3b6ce3e5c773d6df6a1956a38e578ce0e7ff
       '@tetherto/pearpass-lib-constants':
-        specifier: git+https://github.com/tetherto/pearpass-lib-constants.git
-        version: https://codeload.github.com/tetherto/pearpass-lib-constants/tar.gz/8eda39c5c06d69b24d16306cd8de309b5c1fb221
+        specifier: git+https://github.com/Thaoh/lockwright-lib-constants.git
+        version: https://codeload.github.com/Thaoh/lockwright-lib-constants/tar.gz/e8ea95e7456ea9ffc7057bbb97093d6a9563d859
       '@tetherto/pearpass-lib-data-export':
         specifier: git+https://github.com/tetherto/pearpass-lib-data-export.git
         version: https://codeload.github.com/tetherto/pearpass-lib-data-export/tar.gz/baff7490a4dedefa79121eabc3b3e3da86933ed1
@@ -2631,8 +2634,8 @@ packages:
     resolution: {gitHosted: true, tarball: https://codeload.github.com/tetherto/pear-apps-utils-validator/tar.gz/bf6b3b6ce3e5c773d6df6a1956a38e578ce0e7ff}
     version: 0.0.10
 
-  '@tetherto/pearpass-lib-constants@https://codeload.github.com/tetherto/pearpass-lib-constants/tar.gz/8eda39c5c06d69b24d16306cd8de309b5c1fb221':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/tetherto/pearpass-lib-constants/tar.gz/8eda39c5c06d69b24d16306cd8de309b5c1fb221}
+  '@tetherto/pearpass-lib-constants@https://codeload.github.com/Thaoh/lockwright-lib-constants/tar.gz/e8ea95e7456ea9ffc7057bbb97093d6a9563d859':
+    resolution: {gitHosted: true, integrity: sha512-FwkW38su0m3ey3bTUU/6JdgQT9xs60rNcv453KWVDhmN3q7xLlVCh7BApP1bF8Y4JQnjkOiH5FeU7GB6J2X4gQ==, tarball: https://codeload.github.com/Thaoh/lockwright-lib-constants/tar.gz/e8ea95e7456ea9ffc7057bbb97093d6a9563d859}
     version: 0.0.11
 
   '@tetherto/pearpass-lib-data-export@https://codeload.github.com/tetherto/pearpass-lib-data-export/tar.gz/baff7490a4dedefa79121eabc3b3e3da86933ed1':
@@ -2684,6 +2687,10 @@ packages:
     peerDependencies:
       react: '>=18.3.1'
       react-dom: '>=18.3.1'
+
+  '@tetherto/pearpass-utils-password-check@https://codeload.github.com/tetherto/pearpass-utils-password-check/tar.gz/4705b7937691a446412b27df7f7c644d8915aba9':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/tetherto/pearpass-utils-password-check/tar.gz/4705b7937691a446412b27df7f7c644d8915aba9}
+    version: 0.0.14
 
   '@tetherto/pearpass-utils-password-check@https://codeload.github.com/tetherto/pearpass-utils-password-check/tar.gz/5175d97c3c560221a6f1a36d4c3c8be9c45daf81':
     resolution: {gitHosted: true, tarball: https://codeload.github.com/tetherto/pearpass-utils-password-check/tar.gz/5175d97c3c560221a6f1a36d4c3c8be9c45daf81}
@@ -3031,10 +3038,12 @@ packages:
   '@xmldom/xmldom@0.8.13':
     resolution: {integrity: sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xmldom/xmldom@0.9.10':
     resolution: {integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==}
     engines: {node: '>=14.6'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@yarnpkg/lockfile@1.1.0':
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
@@ -4349,6 +4358,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -10183,7 +10193,7 @@ snapshots:
 
   '@tetherto/pear-apps-utils-validator@https://codeload.github.com/tetherto/pear-apps-utils-validator/tar.gz/bf6b3b6ce3e5c773d6df6a1956a38e578ce0e7ff': {}
 
-  '@tetherto/pearpass-lib-constants@https://codeload.github.com/tetherto/pearpass-lib-constants/tar.gz/8eda39c5c06d69b24d16306cd8de309b5c1fb221': {}
+  '@tetherto/pearpass-lib-constants@https://codeload.github.com/Thaoh/lockwright-lib-constants/tar.gz/e8ea95e7456ea9ffc7057bbb97093d6a9563d859': {}
 
   '@tetherto/pearpass-lib-data-export@https://codeload.github.com/tetherto/pearpass-lib-data-export/tar.gz/baff7490a4dedefa79121eabc3b3e3da86933ed1': {}
 
@@ -10214,7 +10224,7 @@ snapshots:
     dependencies:
       '@noble/ciphers': 2.2.0
       '@noble/hashes': 2.3.0
-      '@tetherto/pearpass-utils-password-check': https://codeload.github.com/tetherto/pearpass-utils-password-check/tar.gz/5175d97c3c560221a6f1a36d4c3c8be9c45daf81
+      '@tetherto/pearpass-utils-password-check': https://codeload.github.com/tetherto/pearpass-utils-password-check/tar.gz/4705b7937691a446412b27df7f7c644d8915aba9
       autopass: 3.3.0(bare-buffer@3.6.2)(bare-url@2.4.7)
       b4a: 1.8.1
       bare-buffer: 3.6.2
@@ -10257,6 +10267,8 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
       - redux
+
+  '@tetherto/pearpass-utils-password-check@https://codeload.github.com/tetherto/pearpass-utils-password-check/tar.gz/4705b7937691a446412b27df7f7c644d8915aba9': {}
 
   '@tetherto/pearpass-utils-password-check@https://codeload.github.com/tetherto/pearpass-utils-password-check/tar.gz/5175d97c3c560221a6f1a36d4c3c8be9c45daf81': {}
 

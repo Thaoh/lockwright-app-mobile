@@ -3,11 +3,17 @@ strictPeerDependencies: false
 autoInstallPeers: true
 nodeLinker: hoisted
 blockExoticSubdeps: false
+
+overrides:
+  "@tetherto/pearpass-lib-constants": "git+https://github.com/Thaoh/lockwright-lib-constants.git"
+
 publicHoistPattern:
   - '*react-native*'
   - '*expo*'
 
 allowBuilds:
+  "@tetherto/pearpass-lib-constants": true
+  "@tetherto/pearpass-lib-constants@https://codeload.github.com/Thaoh/lockwright-lib-constants/tar.gz/e8ea95e7456ea9ffc7057bbb97093d6a9563d859": true
   '@sentry/cli': set this to true or false
   "@tetherto/pearpass-lib-vault-core@file:../pearpass-lib-vault-core": true
   "@tetherto/pearpass-lib-vault@file:../pearpass-lib-vault": true
