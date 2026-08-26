@@ -1,7 +1,7 @@
 import { browser, $ } from '@wdio/globals';
 import { Pages } from '@support/page-factory';
 
-const APP_PACKAGE = process.env.APP_PACKAGE || 'com.pears.pass';
+const APP_PACKAGE = process.env.APP_PACKAGE || 'works.dexterity.lockwright';
 
 export async function clearAppData(): Promise<void> {
   try {

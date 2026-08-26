@@ -72,7 +72,7 @@ const withSplashStyles: ConfigPlugin = (config) => {
 // Use withDangerousMod for copying files
 const withSplashFiles: ConfigPlugin = (config) => {
   return withDangerousMod(config, ['android', async (cfg) => {
-    const packageName = cfg.android?.package || 'com.pears.pass';
+    const packageName = cfg.android?.package || 'works.dexterity.lockwright';
     const packagePath = packageName.replace(/\./g, '/');
     const templateDir = path.join(__dirname, '../../templates/android');
     const androidDir = cfg.modRequest.platformProjectRoot;

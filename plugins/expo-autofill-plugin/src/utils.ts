@@ -46,7 +46,7 @@ export async function copyAndProcessSourceFiles(
         const templateEscaped = escapeRegex(templatePackage);
 
         // Single global replacement to avoid double-substitution when packageName
-        // is a superset of templatePackage (e.g. com.pears.pass → com.pears.pass.nightly).
+        // is a superset of templatePackage (e.g. works.dexterity.lockwright → works.dexterity.lockwright.nightly).
         // Sequential replacements would re-match the already-replaced prefix.
         content = content.replace(
           new RegExp(templateEscaped, 'g'),

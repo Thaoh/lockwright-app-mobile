@@ -5,7 +5,7 @@
     "icon": "./assets/images/appIcons/app-icon.png",
     "version": "2.2.0",
     "android": {
-      "package": "com.pears.pass",
+      "package": "works.dexterity.lockwright",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -18,7 +18,7 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "com.pears.pass",
+      "bundleIdentifier": "works.dexterity.lockwright",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app requires access to your photo library to allow you to select and upload photos.",
         "ITSAppUsesNonExemptEncryption": false
@@ -32,7 +32,7 @@
       "appleTeamId": "43QFHSJ5QR",
       "entitlements": {
         "com.apple.developer.authentication-services.autofill-credential-provider": true,
-        "com.apple.security.application-groups": ["group.com.pears.pass"]
+        "com.apple.security.application-groups": ["group.works.dexterity.lockwright"]
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
@@ -140,14 +140,14 @@
               "appExtensions": [
                 {
                   "targetName": "PearPassAutoFillExtension",
-                  "bundleIdentifier": "com.pears.pass.PearPassAutoFillExtension",
+                  "bundleIdentifier": "works.dexterity.lockwright.PearPassAutoFillExtension",
                   "entitlements": {
                     "com.apple.developer.authentication-services.autofill-credential-provider": true,
                     "com.apple.security.application-groups": [
-                      "group.com.pears.pass"
+                      "group.works.dexterity.lockwright"
                     ],
                     "keychain-access-groups": [
-                      "$(AppIdentifierPrefix)com.pears.pass"
+                      "$(AppIdentifierPrefix)works.dexterity.lockwright"
                     ]
                   }
                 }

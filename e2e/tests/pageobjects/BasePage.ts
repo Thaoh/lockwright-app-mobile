@@ -717,7 +717,7 @@ export default abstract class BasePage {
 
   async activateApp(): Promise<this> {
     try {
-      const appId = process.env.APP_PACKAGE || 'com.pears.pass.nightly';
+      const appId = process.env.APP_PACKAGE || 'works.dexterity.lockwright.nightly';
       if (this.isAndroid) {
         await browser.activateApp(appId);
         await browser.pause(500);
@@ -732,7 +732,7 @@ export default abstract class BasePage {
 
   async closeApp(): Promise<this> {
     try {
-      const appId = process.env.APP_PACKAGE || 'com.pears.pass.nightly';
+      const appId = process.env.APP_PACKAGE || 'works.dexterity.lockwright.nightly';
       await browser.terminateApp(appId);
       await browser.pause(500);
       return this;

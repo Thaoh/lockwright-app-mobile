@@ -5,7 +5,7 @@ import { AutofillPluginOptions } from '../index';
 
 export const withAndroidAutofillModule: ConfigPlugin<AutofillPluginOptions> = (config, _options) => {
   return withDangerousMod(config, ['android', async (cfg) => {
-    const packageName = cfg.android?.package || 'com.pears.pass';
+    const packageName = cfg.android?.package || 'works.dexterity.lockwright';
     const packagePath = packageName.replace(/\./g, '/');
     const templateDir = path.join(__dirname, '../../android-template/java');
     const destDir = path.join(

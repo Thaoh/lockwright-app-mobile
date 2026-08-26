@@ -3,7 +3,7 @@ import { ConfigPlugin, withMainApplication as withMainApplicationMod } from '@ex
 export const withMainApplication: ConfigPlugin = (config) => {
   return withMainApplicationMod(config, (cfg) => {
     let contents = cfg.modResults.contents;
-    const packageName = cfg.android?.package || 'com.pears.pass';
+    const packageName = cfg.android?.package || 'works.dexterity.lockwright';
 
     // Add import for CustomSplashScreenPackage if not present
     if (!contents.includes('import ' + packageName + '.CustomSplashScreenPackage')) {

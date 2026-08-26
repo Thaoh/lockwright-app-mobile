@@ -10,7 +10,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     './plugins/expo-autofill-plugin',
     {
       ios: {
-        appGroupIdentifier: 'group.com.pears.pass',
+        appGroupIdentifier: 'group.works.dexterity.lockwright',
       },
       extensionBundlePath: 'bundles/autofill.bundle',
     },
