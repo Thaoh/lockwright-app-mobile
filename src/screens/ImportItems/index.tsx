@@ -2,7 +2,10 @@ import { t } from '@lingui/core/macro'
 import { useNavigation } from '@react-navigation/native'
 import { useForm } from '@tetherto/pear-apps-lib-ui-react-hooks'
 import { Validator } from '@tetherto/pear-apps-utils-validator'
-import { MAX_IMPORT_RECORDS } from '@tetherto/pearpass-lib-constants'
+import {
+  MAX_IMPORT_RECORDS,
+  PEARPASS_WEBSITE
+} from '@tetherto/pearpass-lib-constants'
 import {
   decryptBitwardenJson,
   decryptKeePassKdbx,
@@ -128,8 +131,7 @@ const importOptions: ImportOption[] = [
     testId: 'settings-import-encrypted',
     accepts: ['.json'],
     imgKey: 'encrypted',
-    supportLink:
-      'https://docs.pass.pears.com/how-to-guides/how-to-export-your-vault/'
+    supportLink: PEARPASS_WEBSITE
   },
   {
     title: 'Lockwright Unencrypted File',
@@ -138,8 +140,7 @@ const importOptions: ImportOption[] = [
     testId: 'settings-import-unencrypted',
     accepts: ['.json', '.csv'],
     imgKey: 'unencrypted',
-    supportLink:
-      'https://docs.pass.pears.com/how-to-guides/how-to-export-your-vault/'
+    supportLink: PEARPASS_WEBSITE
   }
 ]
 
