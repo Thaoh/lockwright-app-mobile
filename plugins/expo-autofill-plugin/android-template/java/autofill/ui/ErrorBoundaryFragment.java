@@ -130,8 +130,8 @@ public class ErrorBoundaryFragment extends BaseAutofillFragment {
                 break;
             case VAULT_LOCKED_ERROR:
                 title.setText("Vault In Use");
-                subtitle.setText("PearPass is already running");
-                message.setText("The vault is locked by the PearPass app. Please close PearPass and try again.");
+                subtitle.setText("Lockwright is already running");
+                message.setText("The vault is locked by the Lockwright app. Please close Lockwright and try again.");
                 message.setVisibility(View.VISIBLE);
                 break;
             case TIMEOUT_ERROR:

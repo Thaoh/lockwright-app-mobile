@@ -139,7 +139,7 @@ public final class VaultErrorUtils {
 
         switch (type) {
             case VAULT_LOCKED_ERROR:
-                return "The vault is locked by another process. Please close other PearPass instances and try again.";
+                return "The vault is locked by another process. Please close other Lockwright instances and try again.";
             case TIMEOUT_ERROR:
                 return "The operation timed out. Please try again.";
             case INITIALIZATION_FAILED:

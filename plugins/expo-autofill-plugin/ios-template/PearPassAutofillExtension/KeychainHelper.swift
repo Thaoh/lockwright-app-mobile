@@ -87,7 +87,7 @@ class KeychainHelper {
             do {
                 let success = try await context.evaluatePolicy(
                     .deviceOwnerAuthenticationWithBiometrics,
-                    localizedReason: "Authenticate to access PearPass"
+                    localizedReason: "Authenticate to access Lockwright"
                 )
                 
                 if !success {

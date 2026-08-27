@@ -23,9 +23,9 @@
 
 /* Missing Configuration View */
 "Setup Required" = "Setup Required";
-"PearPass is not configured" = "PearPass is not configured";
+"Lockwright is not configured" = "Lockwright is not configured";
 "To use the autofill extension, please:" = "To use the autofill extension, please:";
-"Open the PearPass app" = "Open the PearPass app";
+"Open the Lockwright app" = "Open the Lockwright app";
 "Set up your master password" = "Set up your master password";
 "Create or import a vault" = "Create or import a vault";
 
@@ -128,7 +128,7 @@
 "An unexpected error occurred. Please try again." = "An unexpected error occurred. Please try again.";
 
 /* V2 — missing configuration screen */
-"Finish setting up PearPass" = "Finish setting up PearPass";
+"Finish setting up Lockwright" = "Finish setting up Lockwright";
 "To use the autofill extension, you'll need to complete a few quick steps in the main app:" = "To use the autofill extension, you'll need to complete a few quick steps in the main app:";
 "Set your Master Password" = "Set your Master Password";
 

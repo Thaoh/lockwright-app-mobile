@@ -366,7 +366,7 @@ public class MasterPasswordFragment extends BaseAutofillFragment {
 
         biometricHelper.authenticateWithBiometric(
             activity,
-            "Authenticate to PearPass",
+            "Authenticate to Lockwright",
             "Use your biometric to unlock"
         ).whenComplete((encryptionData, throwable) -> {
             if (throwable != null) {

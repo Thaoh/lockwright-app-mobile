@@ -40,7 +40,7 @@ public final class ChipFillDecisionTest {
                 "GitHub");
         expect("fallback brand",
                 ChipFillDecision.subtitle("  ", false, false),
-                "PearPass");
+                "Lockwright");
     }
 
     private static void recordHasOtpFromSecretOrCachedCode() {

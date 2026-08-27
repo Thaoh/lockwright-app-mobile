@@ -10,7 +10,7 @@ class PasskeyHelper: NSObject {
     static let shared = PasskeyHelper()
     
     private let domain = "dev-passkey-demo.pears.pass"
-    private let userIdentifier = "PearPass User"
+    private let userIdentifier = "Lockwright User"
     
     private override init() {
         super.init()

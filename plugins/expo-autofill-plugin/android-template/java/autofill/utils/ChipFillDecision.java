@@ -22,7 +22,7 @@ public final class ChipFillDecision {
         if (title != null && !title.trim().isEmpty()) {
             return title.trim();
         }
-        return "PearPass";
+        return "Lockwright";
     }
 
     public static boolean recordHasOtp(Object otp, String otpCode) {

@@ -3,7 +3,7 @@
 //  PearPassAutoFillExtension
 //
 //  missing configuration screen. Mirrors android-template/res/layout/fragment_missing_configuration.xml.
-//  Error icon + "Finish setting up PearPass" + 3 numbered steps + Go Back.
+//  Error icon + "Finish setting up Lockwright" + 3 numbered steps + Go Back.
 //
 
 import SwiftUI
@@ -29,7 +29,7 @@ struct MissingConfigurationView: View {
                         .padding(.top, 56)
                         .padding(.bottom, PPSpacing.s16)
 
-                    Text(NSLocalizedString("Finish setting up PearPass", comment: "missing config title"))
+                    Text(NSLocalizedString("Finish setting up Lockwright", comment: "missing config title"))
                         .font(PPTypography.title)
                         .foregroundColor(PPColors.textPrimary)
                         .multilineTextAlignment(.center)
@@ -43,7 +43,7 @@ struct MissingConfigurationView: View {
                         .padding(.top, PPSpacing.s8)
 
                     VStack(alignment: .leading, spacing: PPSpacing.s8) {
-                        stepRow(number: 1, text: NSLocalizedString("Open the PearPass app", comment: "setup step 1"))
+                        stepRow(number: 1, text: NSLocalizedString("Open the Lockwright app", comment: "setup step 1"))
                         stepRow(number: 2, text: NSLocalizedString("Set your Master Password", comment: "setup step 2"))
                         stepRow(number: 3, text: NSLocalizedString("Create or import a vault", comment: "setup step 3"))
                     }

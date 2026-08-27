@@ -157,7 +157,7 @@ public class PearPassAutofillService extends AutofillService {
             responseBuilder.addDataset(buildAuthDataset(
                     request, parsedFields, targetIds, requestCode, flags,
                     inline,
-                    "PearPass",
+                    "Lockwright",
                     "More",
                     hasSpecificFields(parsedFields),
                     null
@@ -179,7 +179,7 @@ public class PearPassAutofillService extends AutofillService {
         Dataset authDataset = buildAuthDataset(
                 request, parsedFields, targetIds, requestCode, flags,
                 readInlineRequest(request),
-                "PearPass",
+                "Lockwright",
                 subtitle,
                 pinChip,
                 null

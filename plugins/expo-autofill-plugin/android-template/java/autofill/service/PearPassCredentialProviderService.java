@@ -68,8 +68,8 @@ public class PearPassCredentialProviderService extends CredentialProviderService
                         PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
                 CreateEntry createEntry = new CreateEntry.Builder(
-                        "PearPass", pendingIntent)
-                        .setDescription("Save passkey in PearPass")
+                        "Lockwright", pendingIntent)
+                        .setDescription("Save passkey in Lockwright")
                         .build();
 
                 BeginCreateCredentialResponse response =
@@ -161,7 +161,7 @@ public class PearPassCredentialProviderService extends CredentialProviderService
                                 PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
                         PublicKeyCredentialEntry entry = new PublicKeyCredentialEntry.Builder(
-                                this, "Unlock PearPass",
+                                this, "Unlock Lockwright",
                                 pendingIntent, option)
                                 .build();
                         responseBuilder.addCredentialEntry(entry);
