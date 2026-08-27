@@ -263,6 +263,7 @@ declare module '@tetherto/pearpass-lib-vault' {
   // ─── API functions ────────────────────────────────────────────────────────
 
   export function vaultGetFile(key: string): Promise<unknown>
+  export function getCanonicalRecord(recordId: string): Promise<unknown>
   export function listRecords(): Promise<unknown[]>
   export function generateOtpCodesByIds(
     recordIds: string[]

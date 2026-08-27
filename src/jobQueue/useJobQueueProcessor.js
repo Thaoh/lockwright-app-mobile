@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react'
 
-import { useCreateRecord, useRecords } from '@tetherto/pearpass-lib-vault'
+import {
+  getCanonicalRecord,
+  useCreateRecord,
+  useRecords
+} from '@tetherto/pearpass-lib-vault'
 import { pearpassVaultClient } from '@tetherto/pearpass-lib-vault/src/instances'
 import { selectVault } from '@tetherto/pearpass-lib-vault/src/selectors/selectVault'
 import { AppState } from 'react-native'
@@ -36,10 +40,7 @@ export const useJobQueueProcessor = () => {
 
   const getRecord = useCallback(async (recordId) => {
     try {
-      const record = await pearpassVaultClient.activeVaultGet(
-        `record/${recordId}`
-      )
-      return record
+      return await getCanonicalRecord(recordId)
     } catch (error) {
       logger.error('[jobQueue] Failed to get record:', error)
       return null

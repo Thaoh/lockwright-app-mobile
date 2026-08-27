@@ -209,6 +209,40 @@ describe('handleUpdatePasskey', () => {
     )
   })
 
+  it('keeps exact URI match when websites overlap, and defaults only new hosts', async () => {
+    mockGetRecord.mockResolvedValue({
+      data: {
+        title: 'Existing Record',
+        username: 'user@example.com',
+        password: 'secret',
+        websites: ['https://example.com'],
+        uris: [{ uri: 'https://example.com', match: 'exact' }],
+        attachments: []
+      }
+    })
+
+    const payload = {
+      existingRecordId: 'rec-1',
+      credentialId: 'new-cred',
+      websites: ['https://example.com', 'https://new.example.com']
+    }
+
+    await handleUpdatePasskey(payload, deps)
+
+    expect(mockUpdateRecord).toHaveBeenCalledWith(
+      'rec-1',
+      expect.objectContaining({
+        data: expect.objectContaining({
+          websites: ['https://example.com', 'https://new.example.com'],
+          uris: [
+            { uri: 'https://example.com', match: 'exact' },
+            { uri: 'https://new.example.com', match: 'baseDomain' }
+          ]
+        })
+      })
+    )
+  })
+
   it('should ignore an empty title to keep the existing one', async () => {
     const payload = {
       existingRecordId: 'rec-1',

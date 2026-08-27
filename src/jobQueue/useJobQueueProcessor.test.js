@@ -1,4 +1,5 @@
 import { renderHook, act } from '@testing-library/react-native'
+import { getCanonicalRecord } from '@tetherto/pearpass-lib-vault'
 import { AppState } from 'react-native'
 import { useSelector } from 'react-redux'
 
@@ -18,7 +19,8 @@ jest.mock('@tetherto/pearpass-lib-vault', () => ({
   })),
   useRecords: jest.fn(() => ({
     updateRecords: jest.fn()
-  }))
+  })),
+  getCanonicalRecord: jest.fn()
 }))
 
 jest.mock('@tetherto/pearpass-lib-vault/src/instances', () => ({
@@ -179,6 +181,24 @@ describe('useJobQueueProcessor', () => {
     })
 
     expect(processJobQueue).not.toHaveBeenCalled()
+  })
+
+  it('loads the canonical record for job-queue updates', async () => {
+    getCanonicalRecord.mockResolvedValue({
+      id: 'rec-1',
+      data: { uris: [{ uri: 'https://a.com', match: 'exact' }] }
+    })
+
+    renderHook(() => useJobQueueProcessor())
+
+    await act(async () => {
+      await jest.runAllTimersAsync()
+    })
+
+    const { getRecord } = processJobQueue.mock.calls[0][0]
+    const record = await getRecord('rec-1')
+
+    expect(record.data.uris).toEqual([{ uri: 'https://a.com', match: 'exact' }])
   })
 
   it('should skip processing when auto-lock is imminent', async () => {

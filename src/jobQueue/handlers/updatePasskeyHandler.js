@@ -1,3 +1,4 @@
+import { deriveUrisFromWebsites } from '@tetherto/pearpass-lib-vault'
 import * as FileSystem from 'expo-file-system'
 
 import { logger } from '../../utils/logger'
@@ -166,9 +167,16 @@ export const handleUpdatePasskey = async (
     passkeyCreatedAt: createdAt || Date.now(),
     ...(title !== undefined && title !== null && title !== '' && { title }),
     ...(username !== undefined && { username: username ?? '' }),
-    ...(websites !== undefined && { websites: formatWebsites(websites || []) }),
     ...(note !== undefined && { note: note ?? '' }),
     attachments: [...keptAttachments, ...newAttachments]
+  }
+
+  if (websites !== undefined) {
+    updatedData.websites = formatWebsites(websites || [])
+    updatedData.uris = deriveUrisFromWebsites(
+      updatedData.websites,
+      existingRecord.data?.uris
+    )
   }
 
   const updates = { data: updatedData }
