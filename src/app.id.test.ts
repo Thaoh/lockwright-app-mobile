@@ -74,4 +74,24 @@ describe("Lockwright app id", () => {
     for (const root of roots) walk(root);
     expect(hits).toEqual([]);
   });
+
+  it("points Lockwright import help at lockwright.dexterity.works, not PearPass docs", () => {
+    const src = readFileSync(
+      path.resolve(__dirname, "./screens/ImportItems/index.tsx"),
+      "utf8",
+    );
+    expect(src).not.toMatch(/docs\.pass\.pears\.com/);
+    expect(src).toMatch(/PEARPASS_WEBSITE/);
+  });
+
+  it("report-a-problem opens the Lockwright contact form, not Tether Slack or Google Form", () => {
+    const src = readFileSync(
+      path.resolve(__dirname, "./screens/Settings/Feedback/index.jsx"),
+      "utf8",
+    );
+    expect(src).not.toMatch(/sendSlackFeedback|sendGoogleFormFeedback/);
+    expect(src).toMatch(/PEARPASS_WEBSITE/);
+    expect(src).toMatch(/\/contact\//);
+    expect(src).toMatch(/Linking\.openURL/);
+  });
 });
