@@ -24,6 +24,20 @@ public final class LoginFillPlan {
             String password,
             String otpCode
     ) {
+        return values(hasUsernameId, hasPasswordId, hasOtpId, fallbackCount,
+                username, password, otpCode, true);
+    }
+
+    public static Map<String, String> values(
+            boolean hasUsernameId,
+            boolean hasPasswordId,
+            boolean hasOtpId,
+            int fallbackCount,
+            String username,
+            String password,
+            String otpCode,
+            boolean fillOtp
+    ) {
         Map<String, String> out = new LinkedHashMap<>();
         boolean specific = false;
         if (hasUsernameId) {
@@ -34,7 +48,7 @@ public final class LoginFillPlan {
             out.put(PASSWORD, password != null ? password : "");
             specific = true;
         }
-        if (hasOtpId && otpCode != null && !otpCode.isEmpty()) {
+        if (fillOtp && hasOtpId && otpCode != null && !otpCode.isEmpty()) {
             out.put(OTP, otpCode);
             specific = true;
         }

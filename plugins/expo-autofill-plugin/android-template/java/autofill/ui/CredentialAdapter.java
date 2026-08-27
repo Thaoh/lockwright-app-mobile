@@ -64,6 +64,16 @@ public class CredentialAdapter extends BaseItemAdapter<CredentialItem, Credentia
                 subtitle = formatCardSubtitle(c);
             } else {
                 subtitle = c.getUsername();
+                String otpCode = c.getOtpCode();
+                if (otpCode != null && !otpCode.isEmpty()) {
+                    subtitle = (subtitle == null || subtitle.isEmpty())
+                            ? otpCode
+                            : subtitle + " · " + otpCode;
+                } else if (c.hasOtp()) {
+                    subtitle = (subtitle == null || subtitle.isEmpty())
+                            ? "TOTP"
+                            : subtitle + " · TOTP";
+                }
             }
             if (subtitle == null || subtitle.isEmpty()) {
                 username.setVisibility(View.GONE);

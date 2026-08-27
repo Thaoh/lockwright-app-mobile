@@ -67,6 +67,7 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
     private AutofillId identityCountryId;
     private String webDomain;
     private String packageName;
+    private String preselectRecordId;
 
     // Passkey assertion mode
     private boolean isPasskeyAssertion = false;
@@ -198,6 +199,7 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
                 intent.getParcelableArrayListExtra(AutofillConstants.EXTRA_FALLBACK_IDS);
         fallbackIds = extrasFallbacks != null ? extrasFallbacks : new ArrayList<>();
         webDomain = intent.getStringExtra(AutofillConstants.EXTRA_WEB_DOMAIN);
+        preselectRecordId = intent.getStringExtra(AutofillConstants.EXTRA_PRESELECT_RECORD_ID);
         packageName = intent.getStringExtra(AutofillConstants.EXTRA_PACKAGE_NAME);
         if (otpId != null) {
             SecureLog.d(TAG, "OTP field present");
@@ -235,7 +237,8 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
         }
         replaceFragment(CombinedItemsFragment.newInstance(
                 CombinedItemsFragment.MODE_ASSERTION,
-                webDomain, packageName, null, null, recordType), true);
+                webDomain, packageName, null, null, recordType,
+                otpId != null, preselectRecordId), true);
     }
 
     private boolean hasCardFields() {

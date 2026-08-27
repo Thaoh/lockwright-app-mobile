@@ -31,6 +31,7 @@ import com.pears.pass.autofill.data.CredentialItem;
 import com.pears.pass.autofill.ui.AuthenticationActivity;
 import com.pears.pass.autofill.utils.AutofillConstants;
 import com.pears.pass.autofill.utils.AutofillHelper;
+import com.pears.pass.autofill.utils.ChipFillDecision;
 import com.pears.pass.autofill.utils.LoginFillPlan;
 import com.pears.pass.autofill.utils.SecureLog;
 
@@ -123,16 +124,29 @@ public class PearPassAutofillService extends AutofillService {
 
         for (int i = 0; i < matches.size(); i++) {
             CredentialItem item = matches.get(i);
-            RemoteViews presentation = dropdownPresentation(chipTitle(item));
+            String title = chipTitle(item);
+            String subtitle = ChipFillDecision.subtitle(
+                    item.getTitle(),
+                    parsedFields.hasOtpField(),
+                    item.hasOtp()
+            );
+            RemoteViews presentation = dropdownPresentation(title);
             InlinePresentation inlinePresentation = null;
             if (inline != null) {
                 inlinePresentation = buildCredentialInline(
                         inline.specAt(i),
                         requestCode + 20 + i,
                         flags,
-                        chipTitle(item),
-                        chipSubtitle(item)
+                        title,
+                        subtitle
                 );
+            }
+            if (ChipFillDecision.openAppForTotp(parsedFields.hasOtpField(), item.hasOtp())) {
+                responseBuilder.addDataset(buildAuthDataset(
+                        request, parsedFields, targetIds, requestCode + 40 + i, flags,
+                        inline, title, subtitle, true, item.getId()
+                ));
+                continue;
             }
             Dataset.Builder datasetBuilder = new Dataset.Builder();
             applyLoginValues(datasetBuilder, parsedFields, targetIds, item, presentation, inlinePresentation);
@@ -145,7 +159,8 @@ public class PearPassAutofillService extends AutofillService {
                     inline,
                     "PearPass",
                     "More",
-                    hasSpecificFields(parsedFields)
+                    hasSpecificFields(parsedFields),
+                    null
             ));
         }
 
@@ -166,7 +181,8 @@ public class PearPassAutofillService extends AutofillService {
                 readInlineRequest(request),
                 "PearPass",
                 subtitle,
-                pinChip
+                pinChip,
+                null
         );
         return new FillResponse.Builder().addDataset(authDataset).build();
     }
@@ -180,10 +196,14 @@ public class PearPassAutofillService extends AutofillService {
             @Nullable InlineRequest inline,
             String title,
             String subtitle,
-            boolean pinChip
+            boolean pinChip,
+            @Nullable String preselectRecordId
     ) {
         Intent authIntent = new Intent(this, AuthenticationActivity.class);
         putFieldExtras(authIntent, parsedFields);
+        if (preselectRecordId != null && !preselectRecordId.isEmpty()) {
+            authIntent.putExtra(AutofillConstants.EXTRA_PRESELECT_RECORD_ID, preselectRecordId);
+        }
         authIntent.setData(Uri.parse("pearpass://autofill/" + requestCode));
 
         IntentSender sender = PendingIntent.getActivity(this, requestCode, authIntent, flags).getIntentSender();
@@ -212,6 +232,7 @@ public class PearPassAutofillService extends AutofillService {
             RemoteViews presentation,
             @Nullable InlinePresentation inlinePresentation
     ) {
+        boolean fillOtp = false;
         Map<String, String> planned = LoginFillPlan.values(
                 parsedFields.getUsernameId() != null,
                 parsedFields.getPasswordId() != null,
@@ -220,7 +241,8 @@ public class PearPassAutofillService extends AutofillService {
                         ? parsedFields.getFallbackFieldIds().size() : 0,
                 credential.getUsername(),
                 credential.getPassword(),
-                credential.getOtpCode()
+                credential.getOtpCode(),
+                fillOtp
         );
         if (planned.containsKey(LoginFillPlan.USERNAME) && parsedFields.getUsernameId() != null) {
             setDatasetValue(datasetBuilder, parsedFields.getUsernameId(),
@@ -326,14 +348,6 @@ public class PearPassAutofillService extends AutofillService {
             return item.getTitle().trim();
         }
         return AutofillConstants.UNKNOWN_CREDENTIAL;
-    }
-
-    private static String chipSubtitle(CredentialItem item) {
-        if (item.getUsername() != null && !item.getUsername().trim().isEmpty()
-                && item.getTitle() != null && !item.getTitle().trim().isEmpty()) {
-            return item.getTitle().trim();
-        }
-        return "PearPass";
     }
 
     private static String nullToEmpty(String value) {

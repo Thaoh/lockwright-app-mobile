@@ -49,6 +49,7 @@ public final class AutofillConstants {
     public static final String EXTRA_FALLBACK_IDS = "fallback_ids";
     public static final String EXTRA_WEB_DOMAIN = "web_domain";
     public static final String EXTRA_PACKAGE_NAME = "package_name";
+    public static final String EXTRA_PRESELECT_RECORD_ID = "preselect_record_id";
 
     /** In-memory autofill session; matches the app default (15 minutes). */
     public static final long UNLOCK_SESSION_TTL_MS = 15 * 60 * 1000L;

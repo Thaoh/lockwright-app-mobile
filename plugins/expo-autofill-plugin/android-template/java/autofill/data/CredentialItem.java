@@ -44,6 +44,7 @@ public class CredentialItem {
     private String userId;            // Base64URL user ID
     private String credentialId;      // Base64URL credential ID
     private String otpCode;
+    private boolean hasOtp;
 
     public CredentialItem(String id, String title, String username, String password) {
         this.id = id;
@@ -255,6 +256,17 @@ public class CredentialItem {
 
     public void setOtpCode(String otpCode) {
         this.otpCode = otpCode;
+        if (otpCode != null && !otpCode.isEmpty()) {
+            this.hasOtp = true;
+        }
+    }
+
+    public boolean hasOtp() {
+        return hasOtp || (otpCode != null && !otpCode.isEmpty());
+    }
+
+    public void setHasOtp(boolean hasOtp) {
+        this.hasOtp = hasOtp;
     }
 
     /**

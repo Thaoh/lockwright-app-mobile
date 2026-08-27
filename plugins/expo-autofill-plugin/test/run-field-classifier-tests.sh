@@ -29,6 +29,17 @@ javac -d "$TMP" \
 java -cp "$TMP" com.pears.pass.autofill.utils.LoginFillPlanTest
 
 javac -d "$TMP" \
+  "$ROOT/android-template/java/autofill/utils/ChipFillDecision.java" \
+  "$ROOT/test/ChipFillDecisionTest.java"
+java -cp "$TMP" com.pears.pass.autofill.utils.ChipFillDecisionTest
+
+javac -d "$TMP" \
+  "$ROOT/android-template/java/autofill/utils/UriMatchHelper.java" \
+  "$ROOT/android-template/java/autofill/utils/PasskeyPickerPlan.java" \
+  "$ROOT/test/PasskeyPickerPlanTest.java"
+java -cp "$TMP" com.pears.pass.autofill.utils.PasskeyPickerPlanTest
+
+javac -d "$TMP" \
   "$ROOT/android-template/java/autofill/utils/OtpCodeResponse.java" \
   "$ROOT/test/OtpCodeResponseTest.java"
 java -cp "$TMP" com.pears.pass.autofill.utils.OtpCodeResponseTest
@@ -53,13 +64,16 @@ AUTH="$ROOT/android-template/java/autofill/ui/AuthenticationActivity.java"
 grep -q 'LoginFillPlan.values' "$AUTH"
 grep -q 'LoginFillPlan.OTP' "$AUTH"
 grep -q 'generateOtpCode' "$AUTH"
+grep -q 'EXTRA_PRESELECT_RECORD_ID' "$AUTH"
 grep -q 'EXTRA_IDENTITY_NAME_ID' "$AUTH"
 grep -q 'IdentityFillPlan.values' "$AUTH"
 grep -q 'TYPE_IDENTITY' "$AUTH"
 
 SERVICE="$ROOT/android-template/java/autofill/service/PearPassAutofillService.java"
 grep -q 'LoginFillPlan.values' "$SERVICE"
-grep -q 'LoginFillPlan.OTP' "$SERVICE"
+grep -q 'fillOtp' "$SERVICE"
+grep -q 'ChipFillDecision.openAppForTotp' "$SERVICE"
+grep -q 'EXTRA_PRESELECT_RECORD_ID' "$SERVICE"
 
 COMBINED="$ROOT/android-template/java/autofill/ui/CombinedItemsFragment.java"
 grep -q 'TYPE_IDENTITY' "$COMBINED"

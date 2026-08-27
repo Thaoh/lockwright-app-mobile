@@ -14,6 +14,7 @@ public final class LoginFillPlanTest {
         skipsOtpWhenCodeMissing();
         otpOnlyPageDoesNotUseFallback();
         sparseFallbackDoesNotUseOtp();
+        keyboardChipSkipsOtpEvenWhenCodePresent();
 
         if (failures > 0) {
             System.err.println(failures + " LoginFillPlan checks failed");
@@ -51,6 +52,14 @@ public final class LoginFillPlanTest {
         expect("fallback username", got.get(LoginFillPlan.FALLBACK_0), "alice");
         expect("fallback password", got.get(LoginFillPlan.FALLBACK_1), "s3cret");
         expect("fallback never otp", got.containsKey(LoginFillPlan.OTP), false);
+    }
+
+    private static void keyboardChipSkipsOtpEvenWhenCodePresent() {
+        Map<String, String> got = LoginFillPlan.values(
+                true, true, true, 0, "alice", "s3cret", "123456", false);
+        expect("chip username", got.get(LoginFillPlan.USERNAME), "alice");
+        expect("chip password", got.get(LoginFillPlan.PASSWORD), "s3cret");
+        expect("chip never otp", got.containsKey(LoginFillPlan.OTP), false);
     }
 
     private static void expect(String label, Object got, Object want) {
