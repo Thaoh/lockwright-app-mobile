@@ -94,4 +94,13 @@ describe("Lockwright app id", () => {
     expect(src).toMatch(/\/contact\//);
     expect(src).toMatch(/Linking\.openURL/);
   });
+
+  it("app.config.ts has one default export and no leftover tail", () => {
+    const src = readFileSync(
+      path.resolve(__dirname, "../app.config.ts"),
+      "utf8",
+    );
+    expect([...src.matchAll(/^export default /gm)]).toHaveLength(1);
+    expect(src).not.toMatch(/}\s+plugins\.push/);
+  });
 });

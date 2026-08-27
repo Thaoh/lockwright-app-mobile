@@ -53,28 +53,3 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     }
   }
 }
-  plugins.push(['./plugins/withAndroidDistribution', { distribution }])
-  plugins.push([
-    './plugins/expo-autofill-plugin',
-    {
-      ios: {
-        appGroupIdentifier: 'group.works.dexterity.lockwright',
-      },
-      extensionBundlePath: 'bundles/autofill.bundle',
-    },
-  ])
-  if (isNightly) {
-    plugins.push('@sentry/react-native/expo')
-  }
-
-  return {
-    ...config,
-    name: config.name || 'Lockwright',
-    slug: config.slug || 'pearpass-app-mobile',
-    plugins,
-    extra: {
-      ...(config.extra || {}),
-      distribution
-    }
-  }
-}
