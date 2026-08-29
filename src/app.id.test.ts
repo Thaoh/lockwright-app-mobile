@@ -24,6 +24,15 @@ describe("Lockwright app id", () => {
     );
   });
 
+  it("pins @tetherto/pearpass-lib-ui-kit to Thaoh git, not Tether", () => {
+    const pkg = JSON.parse(
+      readFileSync(path.resolve(__dirname, "../package.json"), "utf8"),
+    );
+    expect(pkg.dependencies["@tetherto/pearpass-lib-ui-kit"]).toBe(
+      "git+https://github.com/Thaoh/lockwright-lib-ui-react-native-components.git#design-system-v2",
+    );
+  });
+
   it("ships expo display name Lockwright, not PearPass", () => {
     const app = JSON.parse(
       readFileSync(path.resolve(__dirname, "../app.json"), "utf8"),
