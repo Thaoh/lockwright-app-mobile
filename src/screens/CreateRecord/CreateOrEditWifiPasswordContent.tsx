@@ -30,6 +30,7 @@ import { convertBase64FilesToUint8 } from '../../utils/convertBase64FilesToUint8
 import { getRecordAttachments } from '../../utils/getRecordAttachments'
 import { logger } from '../../utils/logger'
 import { getPasswordIndicatorVariant } from '../../utils/passwordPolicy'
+import { resolveHistoryContext } from '../../utils/passwordGeneratorHistoryContext'
 
 type WifiAttachment = {
   base64?: string
@@ -62,7 +63,10 @@ type Props = {
 type CreatePasswordItemNavigation = {
   navigate: (
     screen: 'CreatePasswordItem',
-    params: { onPasswordInsert: (value: string) => void }
+    params: {
+      onPasswordInsert: (value: string) => void
+      historyContext?: { contextLabel: string; contextKind: 'site' | 'entry' } | null
+    }
   ) => void
   goBack: () => void
 }
@@ -202,7 +206,8 @@ export const CreateOrEditWifiPasswordContent = ({
   const openPasswordGenerator = () => {
     Keyboard.dismiss()
     navigation.navigate('CreatePasswordItem', {
-      onPasswordInsert: (value: string) => setValue('password', value)
+      onPasswordInsert: (value: string) => setValue('password', value),
+      historyContext: resolveHistoryContext({ title: values.title })
     })
   }
 

@@ -1,8 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useLingui } from '@lingui/react/macro'
 import { useNavigation } from '@react-navigation/native'
-import { checkPasswordStrength } from '@tetherto/pearpass-utils-password-check'
+import { formatDate } from '@tetherto/pear-apps-utils-date'
+import {
+  checkPassphraseStrength,
+  checkPasswordStrength
+} from '@tetherto/pearpass-utils-password-check'
 import {
   generatePassphrase,
   generatePassword
@@ -25,6 +29,12 @@ import { BackScreenHeader } from '../../containers/ScreenHeader/BackScreenHeader
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
 import { ContentCopy } from '@tetherto/pearpass-lib-ui-kit/icons'
 import { Layout } from 'src/containers/Layout'
+import {
+  appendHistory,
+  clearHistory,
+  loadHistory,
+  markHistoryUsed
+} from '../../utils/passwordGeneratorHistory'
 
 const PASSWORD_OPTIONS = {
   password: 'password',
@@ -33,8 +43,20 @@ const PASSWORD_OPTIONS = {
 
 type PasswordOption = (typeof PASSWORD_OPTIONS)[keyof typeof PASSWORD_OPTIONS]
 
+const PASSWORD_CHARSET_KEYS = [
+  'capitalLetters',
+  'lowercaseLetters',
+  'numbers',
+  'specialCharacters'
+] as const
+
+type PasswordCharsetKey = (typeof PASSWORD_CHARSET_KEYS)[number]
+
 type PasswordRules = {
   specialCharacters: boolean
+  capitalLetters: boolean
+  lowercaseLetters: boolean
+  numbers: boolean
   characters: number
 }
 
@@ -44,6 +66,26 @@ type PassphraseRules = {
   numbers: boolean
   words: number
 }
+
+type HistoryEntry = {
+  id: string
+  value: string
+  createdAt: number
+  contextLabel?: string
+  contextKind?: 'site' | 'entry'
+  usedAt?: number
+}
+
+type HistoryContext = {
+  contextLabel: string
+  contextKind: 'site' | 'entry'
+}
+
+const HISTORY_DISPLAY_LIMIT = 20
+const PASSWORD_LENGTH_MIN = 4
+const PASSWORD_SLIDER_MAX = 128
+const PASSPHRASE_WORDS_MIN = 6
+const PASSPHRASE_WORDS_MAX = 36
 
 const STRENGTH_TO_INDICATOR = {
   vulnerable: 'vulnerable',
@@ -57,8 +99,17 @@ const titleStyles = css.create({
   }
 })
 
-const renderHighlightedPassword = (text: string, numberColor: string) => {
-  const parts = text.split(/(\d+)/g)
+const formatHistoryCreatedAt = (createdAt: number) => {
+  const date = new Date(createdAt)
+  return `${formatDate(date, 'yyyy-mm-dd', '.')} ${formatDate(date, 'hh-mi-ss', ':')}`
+}
+
+const renderHighlightedPassword = (
+  text: string,
+  numberColor: string,
+  specialColor: string
+) => {
+  const parts = text.split(/(\d+|[^a-zA-Z\d\s])/g)
 
   return parts.map((part, index) => {
     if (!part) {
@@ -69,8 +120,18 @@ const renderHighlightedPassword = (text: string, numberColor: string) => {
       return (
         <Title
           key={`${part}-${index}`}
-          // inline style for dynamic theme color;
           style={{ color: numberColor } as never}
+        >
+          {part}
+        </Title>
+      )
+    }
+
+    if (/[^a-zA-Z\d\s]/.test(part)) {
+      return (
+        <Title
+          key={`${part}-${index}`}
+          style={{ color: specialColor } as never}
         >
           {part}
         </Title>
@@ -85,6 +146,7 @@ type CreatePasswordItemProps = {
   route?: {
     params?: {
       onPasswordInsert?: (value: string) => void
+      historyContext?: HistoryContext | null
     }
   }
 }
@@ -95,6 +157,7 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
   const { theme } = useTheme()
   const { copyToClipboard } = useCopyToClipboard()
   const onPasswordInsert = route?.params?.onPasswordInsert
+  const historyContext = route?.params?.historyContext
 
   const [selectedOption, setSelectedOption] = useState<PasswordOption>(
     PASSWORD_OPTIONS.password
@@ -105,7 +168,10 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
   }>({
     password: {
       specialCharacters: true,
-      characters: 8
+      capitalLetters: true,
+      lowercaseLetters: true,
+      numbers: true,
+      characters: 20
     },
     passphrase: {
       capitalLetters: true,
@@ -114,6 +180,7 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
       words: 8
     }
   })
+  const [history, setHistory] = useState<HistoryEntry[]>([])
 
   const generatedValue = useMemo(() => {
     if (selectedOption === PASSWORD_OPTIONS.passphrase) {
@@ -127,18 +194,35 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
 
     return generatePassword(selectedRules.password.characters, {
       includeSpecialChars: selectedRules.password.specialCharacters,
-      lowerCase: true,
-      upperCase: true,
-      numbers: true
+      lowerCase: selectedRules.password.lowercaseLetters,
+      upperCase: selectedRules.password.capitalLetters,
+      numbers: selectedRules.password.numbers
     })
   }, [selectedOption, selectedRules])
 
-  const strength = useMemo(
-    () => checkPasswordStrength(generatedValue),
-    [generatedValue]
-  )
+  useEffect(() => {
+    if (!generatedValue) return
+    const timer = setTimeout(() => {
+      void appendHistory(generatedValue)
+        .then((entries) => setHistory(entries as HistoryEntry[]))
+        .catch(() => {
+          void loadHistory().then((entries) =>
+            setHistory(entries as HistoryEntry[])
+          )
+        })
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [generatedValue])
 
-  const indicatorVariant = STRENGTH_TO_INDICATOR[strength.type]
+  const strength = useMemo(() => {
+    if (selectedOption === PASSWORD_OPTIONS.passphrase) {
+      return checkPassphraseStrength(generatedValue.split('-'))
+    }
+    return checkPasswordStrength(generatedValue)
+  }, [generatedValue, selectedOption])
+
+  const indicatorVariant =
+    STRENGTH_TO_INDICATOR[(strength as { type: string }).type] ?? 'vulnerable'
 
   const isAllPassphraseRulesSelected =
     selectedRules.passphrase.capitalLetters &&
@@ -149,13 +233,25 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
     key: keyof PasswordRules,
     value: boolean | number
   ) => {
-    setSelectedRules((prev) => ({
-      ...prev,
-      password: {
-        ...prev.password,
-        [key]: value
+    setSelectedRules((prev) => {
+      if (
+        value === false &&
+        PASSWORD_CHARSET_KEYS.includes(key as PasswordCharsetKey)
+      ) {
+        const othersOn = PASSWORD_CHARSET_KEYS.some(
+          (charsetKey) => charsetKey !== key && prev.password[charsetKey]
+        )
+        if (!othersOn) return prev
       }
-    }))
+
+      return {
+        ...prev,
+        password: {
+          ...prev.password,
+          [key]: value
+        }
+      }
+    })
   }
 
   const handlePassphraseRuleChange = (
@@ -174,7 +270,6 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
   const handlePassphraseToggle = (rule: 'all' | keyof PassphraseRules) => {
     if (rule === 'all') {
       const nextValue = !isAllPassphraseRulesSelected
-
       setSelectedRules((prev) => ({
         ...prev,
         passphrase: {
@@ -184,7 +279,6 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
           numbers: nextValue
         }
       }))
-
       return
     }
 
@@ -193,6 +287,9 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
 
   const handlePrimaryAction = () => {
     if (onPasswordInsert) {
+      if (historyContext?.contextLabel) {
+        void markHistoryUsed(generatedValue, historyContext)
+      }
       onPasswordInsert(generatedValue)
       navigation.goBack()
       return
@@ -200,6 +297,8 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
 
     copyToClipboard(generatedValue)
   }
+
+  const visibleHistory = history.slice(0, HISTORY_DISPLAY_LIMIT)
 
   return (
     <Layout
@@ -251,7 +350,8 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
               <Title as="h3" style={titleStyles.generatedPasswordTitle}>
                 {renderHighlightedPassword(
                   generatedValue,
-                  theme.colors.colorPrimary
+                  theme.colors.colorPrimary,
+                  theme.colors.colorTextSecondary
                 )}
               </Title>
             </View>
@@ -328,16 +428,23 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
             <View style={styles.slider}>
               <Slider
                 minimumValue={
-                  selectedOption === PASSWORD_OPTIONS.passphrase ? 6 : 4
+                  selectedOption === PASSWORD_OPTIONS.passphrase
+                    ? PASSPHRASE_WORDS_MIN
+                    : PASSWORD_LENGTH_MIN
                 }
                 maximumValue={
-                  selectedOption === PASSWORD_OPTIONS.passphrase ? 36 : 32
+                  selectedOption === PASSWORD_OPTIONS.passphrase
+                    ? PASSPHRASE_WORDS_MAX
+                    : PASSWORD_SLIDER_MAX
                 }
                 step={1}
                 value={
                   selectedOption === PASSWORD_OPTIONS.passphrase
                     ? selectedRules.passphrase.words
-                    : selectedRules.password.characters
+                    : Math.min(
+                        selectedRules.password.characters,
+                        PASSWORD_SLIDER_MAX
+                      )
                 }
                 minimumTrackTintColor={theme.colors.colorPrimary}
                 maximumTrackTintColor={
@@ -372,69 +479,157 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
             }
           ]}
         >
-          {selectedOption === PASSWORD_OPTIONS.passphrase ? (
-            [
-              {
-                key: 'all',
-                label: t`Select all`,
-                value: isAllPassphraseRulesSelected
-              },
-              {
-                key: 'capitalLetters',
-                label: t`Capital letters`,
-                value: selectedRules.passphrase.capitalLetters
-              },
-              {
-                key: 'symbols',
-                label: t`Symbols`,
-                value: selectedRules.passphrase.symbols
-              },
-              {
-                key: 'numbers',
-                label: t`Numbers`,
-                value: selectedRules.passphrase.numbers
-              }
-            ].map((rule, index, rules) => (
-              <View
-                key={rule.key}
-                style={[
-                  styles.settingRow,
-                  index < rules.length - 1 && {
-                    borderBottomWidth: 1,
-                    borderBottomColor: theme.colors.colorBorderPrimary
-                  }
-                ]}
-              >
-                <Text variant="bodyEmphasized">{rule.label}</Text>
-
-                <ToggleSwitch
-                  checked={rule.value}
-                  onChange={() =>
-                    handlePassphraseToggle(
-                      rule.key as 'all' | keyof PassphraseRules
-                    )
-                  }
-                  aria-label={rule.label}
-                />
-              </View>
-            ))
-          ) : (
-            <View style={styles.settingRow}>
-              <Text variant="bodyEmphasized">{t`Special character (!&*)`}</Text>
-
-              <ToggleSwitch
-                checked={selectedRules.password.specialCharacters}
-                onChange={() =>
-                  handlePasswordRuleChange(
-                    'specialCharacters',
-                    !selectedRules.password.specialCharacters
-                  )
+          {selectedOption === PASSWORD_OPTIONS.passphrase
+            ? [
+                {
+                  key: 'all',
+                  label: t`Select all`,
+                  value: isAllPassphraseRulesSelected
+                },
+                {
+                  key: 'capitalLetters',
+                  label: t`Capital letters`,
+                  value: selectedRules.passphrase.capitalLetters
+                },
+                {
+                  key: 'symbols',
+                  label: t`Symbols`,
+                  value: selectedRules.passphrase.symbols
+                },
+                {
+                  key: 'numbers',
+                  label: t`Numbers`,
+                  value: selectedRules.passphrase.numbers
                 }
-                aria-label={t`Special character toggle`}
-              />
-            </View>
+              ].map((rule, index, rules) => (
+                <View
+                  key={rule.key}
+                  style={[
+                    styles.settingRow,
+                    index < rules.length - 1 && {
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.colors.colorBorderPrimary
+                    }
+                  ]}
+                >
+                  <Text variant="bodyEmphasized">{rule.label}</Text>
+                  <ToggleSwitch
+                    checked={rule.value}
+                    onChange={() =>
+                      handlePassphraseToggle(
+                        rule.key as 'all' | keyof PassphraseRules
+                      )
+                    }
+                    aria-label={rule.label}
+                  />
+                </View>
+              ))
+            : [
+                {
+                  key: 'capitalLetters' as const,
+                  label: t`Capital letters`,
+                  value: selectedRules.password.capitalLetters
+                },
+                {
+                  key: 'lowercaseLetters' as const,
+                  label: t`Lowercase letters`,
+                  value: selectedRules.password.lowercaseLetters
+                },
+                {
+                  key: 'numbers' as const,
+                  label: t`Numbers`,
+                  value: selectedRules.password.numbers
+                },
+                {
+                  key: 'specialCharacters' as const,
+                  label: t`Special character (!&*)`,
+                  value: selectedRules.password.specialCharacters
+                }
+              ].map((rule, index, rules) => (
+                <View
+                  key={rule.key}
+                  testID={`password-generator-setting-${rule.key}`}
+                  style={[
+                    styles.settingRow,
+                    index < rules.length - 1 && {
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.colors.colorBorderPrimary
+                    }
+                  ]}
+                >
+                  <Text variant="bodyEmphasized">{rule.label}</Text>
+                  <ToggleSwitch
+                    checked={rule.value}
+                    onChange={() =>
+                      handlePasswordRuleChange(rule.key, !rule.value)
+                    }
+                    aria-label={rule.label}
+                  />
+                </View>
+              ))}
+        </View>
+      </View>
+
+      <View style={styles.section} testID="password-generator-history">
+        <View style={styles.historyHeader}>
+          <Text variant="caption" color={theme.colors.colorTextSecondary}>
+            {t`History`}
+          </Text>
+          {history.length > 0 && (
+            <Button
+              variant="tertiary"
+              size="small"
+              onClick={() => {
+                void clearHistory()
+                  .then((entries) => setHistory(entries as HistoryEntry[]))
+                  .catch(() => setHistory([]))
+              }}
+            >
+              {t`Clear history`}
+            </Button>
           )}
         </View>
+
+        {visibleHistory.length === 0 ? (
+          <Text variant="body" color={theme.colors.colorTextTertiary}>
+            {t`No generated passwords yet`}
+          </Text>
+        ) : (
+          visibleHistory.map((entry, index) => (
+            <View
+              key={entry.id}
+              style={[
+                styles.historyRow,
+                index < visibleHistory.length - 1 && {
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.colors.colorBorderPrimary
+                }
+              ]}
+            >
+              <View style={styles.historyMeta}>
+                <Text variant="bodyEmphasized">{entry.value}</Text>
+                <Text variant="caption" color={theme.colors.colorTextTertiary}>
+                  {formatHistoryCreatedAt(entry.createdAt)}
+                </Text>
+                {entry.contextLabel ? (
+                  <Text
+                    variant="caption"
+                    color={theme.colors.colorTextTertiary}
+                  >
+                    {entry.contextLabel}
+                  </Text>
+                ) : null}
+              </View>
+              <Button
+                variant="tertiary"
+                size="small"
+                aria-label={t`Copy password`}
+                iconBefore={<ContentCopy width={16} height={16} />}
+                onClick={() => copyToClipboard(entry.value)}
+              />
+            </View>
+          ))
+        )}
       </View>
     </Layout>
   )
@@ -503,5 +698,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: rawTokens.spacing12
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: rawTokens.spacing12,
+    paddingVertical: rawTokens.spacing12
+  },
+  historyMeta: {
+    flex: 1,
+    gap: rawTokens.spacing4
   }
 })

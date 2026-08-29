@@ -39,6 +39,7 @@ import { URI_MATCH_TYPES, type UriMatchType } from '../../utils/uriMatch/constan
 import { buildLoginUris, websiteRowsFromRecord } from '../../utils/uriMatch'
 import { OtpSecretScanButton } from './OtpSecretScanButton'
 import { WebsiteUriMatchField } from './WebsiteUriMatchField'
+import { resolveHistoryContext } from '../../utils/passwordGeneratorHistoryContext'
 
 type LoginAttachment = {
   base64?: string
@@ -88,7 +89,10 @@ interface Props {
 type CreatePasswordItemNavigation = {
   navigate: (
     screen: 'CreatePasswordItem',
-    params: { onPasswordInsert: (value: string) => void }
+    params: {
+      onPasswordInsert: (value: string) => void
+      historyContext?: { contextLabel: string; contextKind: 'site' | 'entry' } | null
+    }
   ) => void
   goBack: () => void
 }
@@ -280,7 +284,11 @@ export const CreateOrEditLoginContent = ({
   const openPasswordGenerator = () => {
     Keyboard.dismiss()
     navigation.navigate('CreatePasswordItem', {
-      onPasswordInsert: (value: string) => setValue('password', value)
+      onPasswordInsert: (value: string) => setValue('password', value),
+      historyContext: resolveHistoryContext({
+        title: values.title,
+        websiteUrl: websitesList?.[0]?.website
+      })
     })
   }
 

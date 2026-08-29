@@ -216,11 +216,20 @@ describe("Lockwright app id", () => {
       path.resolve(__dirname, "./screens/CreateRecord/CreatePasswordItem.tsx"),
       "utf8",
     );
+    const history = readFileSync(
+      path.resolve(__dirname, "./utils/passwordGeneratorHistory.js"),
+      "utf8",
+    );
     expect(folderList).toMatch(/id: ['"]generator['"]/);
     expect(folderList).toMatch(/t`Generator`/);
     expect(drawer).toMatch(/folder\?\.id === ['"]generator['"]/);
     expect(drawer).toMatch(/navigate\(['"]CreatePasswordItem['"]\)/);
     expect(generator).toMatch(/t`Generator`/);
+    expect(history).toMatch(/app\/password-generator-history/);
+    expect(generator).toMatch(/characters: 20/);
+    expect(generator).toMatch(/lowercaseLetters/);
+    expect(generator).toMatch(/PASSWORD_SLIDER_MAX = 128/);
+    expect(generator).toMatch(/markHistoryUsed/);
   });
 
   it("app.config.ts has one default export and no leftover tail", () => {
