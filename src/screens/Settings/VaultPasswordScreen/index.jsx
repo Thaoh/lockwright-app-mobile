@@ -388,8 +388,8 @@ const styles = StyleSheet.create({
   },
   inputWrapperActive: {
     backgroundColor: '#212814',
-    borderColor: '#B0D944',
-    shadowColor: '#B0D944',
+    borderColor: '#b08d57',
+    shadowColor: '#b08d57',
     shadowOpacity: 0.35,
     shadowRadius: 0,
     shadowOffset: { width: 0, height: 0 }

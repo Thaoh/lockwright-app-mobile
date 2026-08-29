@@ -1,31 +1,28 @@
-PearPass – A fully local, open-source password manager.
+Lockwright is a peer-to-peer password manager. Vaults stay on the device. Sync is device to device. No cloud account.
 
-PearPass is a fully local, open-source password manager designed for complete privacy and control. Unlike traditional cloud-based managers, PearPass never sends your data to external servers. All credentials are stored and encrypted directly on your device using strong end-to-end encryption. Whether you’re syncing between your phone and laptop or managing hundreds of logins, PearPass gives you full ownership of your digital identity. There is no central infrastructure to target, no hidden storage, and no third-party access.
+Community fork of PearPass (Apache 2.0). Not affiliated with or endorsed by Tether Data or the Pears project.
 
-Key Features
+Key features
 
-Device-Only Storage
-Your passwords are stored locally on your devices, not in the cloud. You decide which devices have access. PearPass never uploads or stores your data externally.
+Device-only storage
+Passwords, notes, cards, and identities stay on devices you control. Lockwright does not upload the vault.
 
-Peer-to-Peer Sync
-Secure syncing between your own devices without using a central server. Your data moves directly and securely between devices you control.
+Peer-to-peer sync
+Pair devices directly. There is no central sync server.
 
-End-to-End Encryption
-All data is encrypted using proven cryptographic primitives from Libsodium. No one else can access or read your vault—not even us.
+End-to-end encryption
+Vault data is encrypted with libsodium primitives. Other devices read it only after you pair them.
 
-Open Source and Independently Audited
-PearPass is fully open source and has been independently reviewed by Secfault Security, a respected firm specializing in cryptography and offensive security.
+Open source
+Lockwright is Apache 2.0. The Secfault Security audit applies to PearPass as it existed at the fork point. It does not cover Lockwright changes after that date.
 
-Offline-First Design
-Works without an internet connection. Your password vault is available at all times, even during outages or when you’re traveling.
+Offline-first
+The vault works without a network.
 
-Password Generator
-Generate strong, unique passwords with one tap. Reduce the risks of reused or weak credentials.
+Password generator
+Create strong passwords on the device.
 
-Minimal and Fast
-PearPass is lightweight, efficient, and designed for users who value both privacy and simplicity.
+Why local storage
+Cloud password managers are high-value targets. Lockwright has no cloud vault to breach.
 
-Why Local Storage Matters
-In 2025, a single data breach leaked over 16 billion credentials. Cloud-based password managers, regardless of their security, rely on centralized systems that remain high-value targets for attackers. PearPass removes this risk entirely. With no cloud storage and no backend infrastructure, your data stays where it belongs—on your devices.
-
-PearPass is free to use, fully transparent, and built for users who demand control over their digital security. Your passwords are yours. Keep them safe, private, and fully in your hands.
+Lockwright is free. The vault is yours.

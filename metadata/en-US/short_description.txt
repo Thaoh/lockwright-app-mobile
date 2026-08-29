@@ -1,1 +1,1 @@
-Open-source password manager that stores data only on your device.
+Peer-to-peer password manager. Vaults stay on the device.

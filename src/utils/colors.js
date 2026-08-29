@@ -13,13 +13,13 @@ const c = (mode1, option1, dark, white) => ({
 })
 
 export const colors = {
-  black: c('#050B06'),
+  black: c('#08090b'),
   white: c('#F6F6F6'),
-  primary100: c('#949A83'),
-  primary200: c('#99A578'),
-  primary300: c('#A3BB62'),
-  primary400: c('#BADE5B', '#B0D944', '#B0D944', '#B0D944'),
-  primary500: c('#B2DD40'),
+  primary100: c('#8a7a5c'),
+  primary200: c('#9a8560'),
+  primary300: c('#b08d57'),
+  primary400: c('#d4af77', '#b08d57', '#b08d57', '#b08d57'),
+  primary500: c('#d4af77'),
   secondary100: c('#A5BFC0'),
   secondary200: c('#779FA1'),
   secondary300: c('#5F8587'),

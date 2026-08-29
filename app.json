@@ -14,7 +14,7 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/appIcons/adaptive-icon.png",
-        "backgroundColor": "#232323"
+        "backgroundColor": "#08090b"
       }
     },
     "ios": {

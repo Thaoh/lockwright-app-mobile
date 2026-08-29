@@ -2,7 +2,7 @@ import { ConfigPlugin, withDangerousMod, withAndroidStyles } from '@expo/config-
 import * as fs from 'fs';
 import * as path from 'path';
 
-const DARK_BACKGROUND_COLOR = '#232323';
+const DARK_BACKGROUND_COLOR = '#08090b';
 
 // Use withAndroidStyles to properly modify styles.xml through Expo's pipeline
 const withSplashStyles: ConfigPlugin = (config) => {

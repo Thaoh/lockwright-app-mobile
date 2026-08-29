@@ -21,4 +21,12 @@ describe('LogoLock Component', () => {
 
     expect(tree).toMatchSnapshot()
   })
+
+  it('uses the hatch-plate brass, not PearPass lime', () => {
+    const { toJSON } = render(<LogoLock />)
+    const src = JSON.stringify(toJSON())
+    expect(src).toContain('4289760599')
+    expect(src).toContain('"vbWidth":64')
+    expect(src).not.toMatch(/#B0D944|#BADE5B/i)
+  })
 })

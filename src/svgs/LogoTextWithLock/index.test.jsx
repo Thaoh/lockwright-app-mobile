@@ -28,4 +28,12 @@ describe('LogoTextWithLock Component', () => {
     const pathCount = tree.children.length
     expect(pathCount).toBeGreaterThan(0)
   })
+
+  it('uses the hatch-plate brass wordmark, not PearPass lime', () => {
+    const { toJSON } = render(<LogoTextWithLock />)
+    const src = JSON.stringify(toJSON())
+    expect(src).toContain('4289760599')
+    expect(src).toContain('Lockwright')
+    expect(src).not.toMatch(/#B0D944|#BADE5B/i)
+  })
 })

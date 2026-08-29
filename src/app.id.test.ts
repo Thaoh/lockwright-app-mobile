@@ -104,6 +104,36 @@ describe("Lockwright app id", () => {
     expect(src).toMatch(/Linking\.openURL/);
   });
 
+  it("in-app logos use the hatch plate, not PearPass lime", () => {
+    const files = [
+      path.resolve(__dirname, "./svgs/LogoLock/index.jsx"),
+      path.resolve(__dirname, "./svgs/LogoTextWithLock/index.jsx"),
+    ];
+    for (const file of files) {
+      const src = readFileSync(file, "utf8");
+      expect(src).toContain("#b08d57");
+      expect(src).not.toMatch(/#B0D944|#BADE5B/i);
+    }
+  });
+
+  it("Play listing is Lockwright with a 512 icon", () => {
+    const title = readFileSync(
+      path.resolve(__dirname, "../metadata/en-US/title.txt"),
+      "utf8",
+    ).trim();
+    expect(title).toBe("Lockwright");
+    const icon = readFileSync(
+      path.resolve(__dirname, "../metadata/en-US/images/icon.png"),
+    );
+    expect(icon.readUInt32BE(16)).toBe(512);
+    expect(icon.readUInt32BE(20)).toBe(512);
+    const listing = readFileSync(
+      path.resolve(__dirname, "../metadata/en-US/full_description.txt"),
+      "utf8",
+    );
+    expect(listing).not.toMatch(/PearPass is a fully local/);
+  });
+
   it("app.config.ts has one default export and no leftover tail", () => {
     const src = readFileSync(
       path.resolve(__dirname, "../app.config.ts"),

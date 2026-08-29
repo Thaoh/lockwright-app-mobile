@@ -300,7 +300,7 @@ export const VaultShareScreen = () => {
                     onChange={setAccessOnce}
                     testID="vault-share-access-once-toggle"
                     accessibilityLabel={t`Access Once`}
-                    trackColorTrue="#B0D944"
+                    trackColorTrue="#b08d57"
                     trackColorFalse="#2C3618"
                     thumbColor="#ECF1EE"
                     style={styles.switch}
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     borderRadius: 999,
-    backgroundColor: '#B0D944'
+    backgroundColor: '#b08d57'
   },
   expiryLabel: {
     color: '#BDC3AC',
@@ -509,14 +509,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#15180E'
   },
   radioOuterSelected: {
-    borderColor: '#B0D944',
-    backgroundColor: '#B0D944'
+    borderColor: '#b08d57',
+    backgroundColor: '#b08d57'
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 100,
-    backgroundColor: '#B0D944'
+    backgroundColor: '#b08d57'
   },
   optionCopy: {
     flex: 1,
