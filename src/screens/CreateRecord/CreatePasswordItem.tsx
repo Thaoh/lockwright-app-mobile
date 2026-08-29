@@ -35,6 +35,11 @@ import {
   loadHistory,
   markHistoryUsed
 } from '../../utils/passwordGeneratorHistory'
+import {
+  DEFAULT_CHARACTER_COUNT,
+  loadLastCharacterCount,
+  saveLastCharacterCount
+} from '../../utils/passwordGeneratorPrefs'
 
 const PASSWORD_OPTIONS = {
   password: 'password',
@@ -171,7 +176,7 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
       capitalLetters: true,
       lowercaseLetters: true,
       numbers: true,
-      characters: 20
+      characters: DEFAULT_CHARACTER_COUNT
     },
     passphrase: {
       capitalLetters: true,
@@ -181,6 +186,23 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
     }
   })
   const [history, setHistory] = useState<HistoryEntry[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    void loadLastCharacterCount().then((characters) => {
+      if (cancelled) return
+      setSelectedRules((prev) => {
+        if (prev.password.characters === characters) return prev
+        return {
+          ...prev,
+          password: { ...prev.password, characters }
+        }
+      })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const generatedValue = useMemo(() => {
     if (selectedOption === PASSWORD_OPTIONS.passphrase) {
@@ -252,6 +274,9 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
         }
       }
     })
+    if (key === 'characters' && typeof value === 'number') {
+      void saveLastCharacterCount(value)
+    }
   }
 
   const handlePassphraseRuleChange = (

@@ -226,7 +226,9 @@ describe("Lockwright app id", () => {
     expect(drawer).toMatch(/navigate\(['"]CreatePasswordItem['"]\)/);
     expect(generator).toMatch(/t`Generator`/);
     expect(history).toMatch(/app\/password-generator-history/);
-    expect(generator).toMatch(/characters: 20/);
+    expect(generator).toMatch(/DEFAULT_CHARACTER_COUNT/);
+    expect(generator).toMatch(/loadLastCharacterCount/);
+    expect(generator).toMatch(/saveLastCharacterCount/);
     expect(generator).toMatch(/lowercaseLetters/);
     expect(generator).toMatch(/PASSWORD_SLIDER_MAX = 128/);
     expect(generator).toMatch(/markHistoryUsed/);
