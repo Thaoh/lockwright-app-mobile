@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
 import path from "path";
 
 const APP_ID = "works.dexterity.lockwright";
@@ -102,6 +102,52 @@ describe("Lockwright app id", () => {
     expect(src).toMatch(/PEARPASS_WEBSITE/);
     expect(src).toMatch(/\/contact\//);
     expect(src).toMatch(/Linking\.openURL/);
+  });
+
+  it("onboarding autofill graphic is Lockwright, not the PearPass rive", () => {
+    const src = readFileSync(
+      path.resolve(
+        __dirname,
+        "./screens/Onboarding/screens/AutofillScreen.jsx",
+      ),
+      "utf8",
+    );
+    expect(src).not.toMatch(/resourceName=["']autofill["']/);
+    expect(src).toMatch(/LogoLock/);
+    expect(src).toMatch(/Lockwright/);
+    expect(
+      existsSync(
+        path.resolve(
+          __dirname,
+          "../plugins/withRiveAssets/templates/android/autofill.riv",
+        ),
+      ),
+    ).toBe(false);
+    expect(
+      existsSync(
+        path.resolve(
+          __dirname,
+          "../plugins/withRiveAssets/templates/ios/autofill.riv",
+        ),
+      ),
+    ).toBe(false);
+  });
+
+  it("onboarding wash is hatch dusk, not PearPass olive", () => {
+    const files = [
+      path.resolve(
+        __dirname,
+        "./screens/Onboarding/components/OnboardingLayout.jsx",
+      ),
+      path.resolve(
+        __dirname,
+        "./screens/Onboarding/screens/DataLocalScreen.jsx",
+      ),
+    ];
+    for (const file of files) {
+      const src = readFileSync(file, "utf8");
+      expect(src).not.toMatch(/#3A4A1A|#B0D944|#BADE5B/i);
+    }
   });
 
   it("in-app logos use the hatch plate, not PearPass lime", () => {

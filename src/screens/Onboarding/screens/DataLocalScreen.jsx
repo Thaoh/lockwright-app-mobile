@@ -133,7 +133,7 @@ export const DataLocalScreen = () => {
   const navigation = useNavigation()
   const { theme } = useTheme()
   const gradientColors = [
-    { color: '#3A4A1A', offset: '0%' },
+    { color: '#2a2418', offset: '0%' },
     { color: theme.colors.colorSurfacePrimary, offset: '100%', opacity: 0 }
   ]
 

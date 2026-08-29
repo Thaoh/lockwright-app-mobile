@@ -5,8 +5,8 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import { Button, Text, Title, useTheme } from '@tetherto/pearpass-lib-ui-kit'
 import { OpenInNew } from '@tetherto/pearpass-lib-ui-kit/icons'
 import { AppState, Dimensions, Platform, StyleSheet, View } from 'react-native'
-import Rive from 'rive-react-native'
 
+import { LogoLock } from '../../../svgs/LogoLock'
 import {
   isAutofillEnabled,
   openAutofillSettings,
@@ -81,13 +81,27 @@ export const AutofillScreen = () => {
     >
       <View style={styles.container}>
         <View style={styles.topSection}>
-          <View style={styles.riveContainer}>
-            <Rive
-              resourceName="autofill"
-              autoplay
-              style={styles.riveAnimation}
-              data-testid="onboarding-autofill-media"
-            />
+          <View
+            style={styles.riveContainer}
+            data-testid="onboarding-autofill-media"
+          >
+            <View style={styles.autofillCard}>
+              <View style={styles.autofillChip}>
+                <LogoLock width={28} height={28} />
+                <Text as="p" style={styles.autofillBrand}>
+                  Lockwright
+                </Text>
+                <View style={styles.autofillRule} />
+                <Text as="p" style={styles.autofillDots}>
+                  {'••••••••'}
+                </Text>
+              </View>
+              <View style={styles.autofillKeys}>
+                {Array.from({ length: 21 }, (_, i) => (
+                  <View key={i} style={styles.autofillKey} />
+                ))}
+              </View>
+            </View>
           </View>
 
           <View style={styles.copyContainer}>
@@ -140,11 +154,62 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH * 0.9,
     height: SCREEN_WIDTH * 0.9,
     overflow: 'hidden',
-    marginTop: 108
+    marginTop: 108,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
-  riveAnimation: {
+  autofillCard: {
     width: '100%',
-    height: '100%'
+    maxWidth: 320,
+    backgroundColor: '#14161b',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2a2e36',
+    paddingHorizontal: 20,
+    paddingTop: 28,
+    paddingBottom: 20,
+    alignItems: 'center'
+  },
+  autofillChip: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#08090b',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#2a2e36',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8
+  },
+  autofillBrand: {
+    color: '#d4af77',
+    fontSize: 16
+  },
+  autofillRule: {
+    width: 1,
+    height: 18,
+    backgroundColor: '#2a2e36',
+    marginHorizontal: 4
+  },
+  autofillDots: {
+    color: '#8a8378',
+    letterSpacing: 2,
+    flex: 1
+  },
+  autofillKeys: {
+    width: '100%',
+    marginTop: 28,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 6
+  },
+  autofillKey: {
+    width: 28,
+    height: 28,
+    borderRadius: 4,
+    backgroundColor: '#1c1f26'
   },
   buttonContainer: {
     paddingHorizontal: 16,

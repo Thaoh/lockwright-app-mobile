@@ -20,7 +20,7 @@ export const OnboardingLayout = ({
   const backgroundColor = theme.colors.colorSurfacePrimary
 
   const topGradientColors = [
-    { color: '#3A4A1A', offset: '0%' },
+    { color: '#2a2418', offset: '0%' },
     { color: backgroundColor, offset: '100%', opacity: 0 }
   ]
   const insets = useSafeAreaInsets()
