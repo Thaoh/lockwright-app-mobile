@@ -180,6 +180,49 @@ describe("Lockwright app id", () => {
     expect(listing).not.toMatch(/PearPass is a fully local/);
   });
 
+  it("Play targets Android 16 and minifies release with R8", () => {
+    const app = JSON.parse(
+      readFileSync(path.resolve(__dirname, "../app.json"), "utf8"),
+    );
+    const android = app.expo.plugins.find(
+      (plugin: unknown) =>
+        Array.isArray(plugin) && plugin[0] === "expo-build-properties",
+    )?.[1]?.android;
+    expect(android.compileSdkVersion).toBe(36);
+    expect(android.targetSdkVersion).toBe(36);
+    expect(android.buildToolsVersion).toBe("36.0.0");
+    expect(android.enableMinifyInReleaseBuilds).toBe(true);
+    const plugin = readFileSync(
+      path.resolve(
+        __dirname,
+        "../plugins/withAppConfig/src/android/withCompileSdk36.ts",
+      ),
+      "utf8",
+    );
+    expect(plugin).toMatch(/suppressUnsupportedCompileSdk/);
+    expect(plugin).toMatch(/['"]36['"]/);
+  });
+
+  it("drawer lists Generator and opens the password generator", () => {
+    const folderList = readFileSync(
+      path.resolve(__dirname, "./containers/FolderList/index.jsx"),
+      "utf8",
+    );
+    const drawer = readFileSync(
+      path.resolve(__dirname, "./containers/DrawerContent/index.jsx"),
+      "utf8",
+    );
+    const generator = readFileSync(
+      path.resolve(__dirname, "./screens/CreateRecord/CreatePasswordItem.tsx"),
+      "utf8",
+    );
+    expect(folderList).toMatch(/id: ['"]generator['"]/);
+    expect(folderList).toMatch(/t`Generator`/);
+    expect(drawer).toMatch(/folder\?\.id === ['"]generator['"]/);
+    expect(drawer).toMatch(/navigate\(['"]CreatePasswordItem['"]\)/);
+    expect(generator).toMatch(/t`Generator`/);
+  });
+
   it("app.config.ts has one default export and no leftover tail", () => {
     const src = readFileSync(
       path.resolve(__dirname, "../app.config.ts"),

@@ -208,7 +208,7 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
       contentStyle={styles.content}
       header={
         <BackScreenHeader
-          title={t`New Password Item`}
+          title={onPasswordInsert ? t`New Password Item` : t`Generator`}
           onBack={() => navigation.goBack()}
         />
       }

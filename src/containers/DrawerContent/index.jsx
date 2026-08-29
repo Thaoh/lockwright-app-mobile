@@ -121,7 +121,8 @@ export const DrawerContent = ({ navigation }) => {
     if (
       folderName !== 'Favorites' &&
       folderName !== 'All Folders' &&
-      folderName !== 'Authenticator'
+      folderName !== 'Authenticator' &&
+      folderName !== 'Generator'
     ) {
       expand({
         children: <BottomSheetFolderMenuContent folderName={folderName} />,
@@ -147,6 +148,11 @@ export const DrawerContent = ({ navigation }) => {
                   sort: 'recent'
                 })
                 navigation.navigate('Authenticator')
+                navigation.closeDrawer()
+                return
+              }
+              if (folder?.id === 'generator') {
+                navigation.navigate('CreatePasswordItem')
                 navigation.closeDrawer()
                 return
               }

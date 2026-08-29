@@ -7,7 +7,8 @@ import {
   Folder as FolderIcon,
   LockOutlined,
   Add,
-  StarFilled
+  StarFilled,
+  SyncLock
 } from '@tetherto/pearpass-lib-ui-kit/icons'
 import { useFolders, useRecordCountsByType } from '@tetherto/pearpass-lib-vault'
 import { colors } from 'src/utils/colors'
@@ -85,7 +86,14 @@ export const FolderList = ({
                 isAuthenticator: true
               }
             ]
-          : [])
+          : []),
+        {
+          name: t`Generator`,
+          id: 'generator',
+          icon: (
+            <SyncLock width="26" height="26" color={colors.primary400.mode1} />
+          )
+        }
       ]
     }
 
