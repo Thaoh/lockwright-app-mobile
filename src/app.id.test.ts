@@ -15,6 +15,14 @@ describe("Lockwright app id", () => {
     ).toEqual([`group.${APP_ID}`]);
   });
 
+  it("sets Android versionCode past Play's already-used 1", () => {
+    const app = JSON.parse(
+      readFileSync(path.resolve(__dirname, "../app.json"), "utf8"),
+    );
+    expect(app.expo.android.versionCode).toBeGreaterThan(1);
+    expect(Number.isInteger(app.expo.android.versionCode)).toBe(true);
+  });
+
   it("pins @tetherto/pearpass-lib-constants to Thaoh git, not Tether or file:", () => {
     const pkg = JSON.parse(
       readFileSync(path.resolve(__dirname, "../package.json"), "utf8"),
