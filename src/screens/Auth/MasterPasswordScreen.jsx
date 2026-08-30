@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 
 import { useLingui } from '@lingui/react/macro'
 import { useNavigation } from '@react-navigation/native'
@@ -55,6 +55,8 @@ export const MasterPasswordScreen = () => {
 
   const [isLoading, setIsLoading] = useState(false)
   const [failedAttempts, setFailedAttempts] = useState(0)
+  const [biometricAttempted, setBiometricAttempted] = useState(false)
+  const hasAutoPrompted = useRef(false)
 
   const { logIn, refreshMasterPasswordStatus } = useUserData()
   const { initVaults } = useVaults()
@@ -129,6 +131,7 @@ export const MasterPasswordScreen = () => {
         : undefined
 
       if (!parsedEncryptionData) {
+        setBiometricAttempted(true)
         Toast.show({
           type: 'baseToast',
           text1: t`ERROR: No encryption data found`,
@@ -145,6 +148,7 @@ export const MasterPasswordScreen = () => {
       await autoSelectVault()
     } catch (error) {
       logger.error('Biometric login error:', error)
+      setBiometricAttempted(true)
       Toast.show({
         type: 'baseToast',
         text1: t`ERROR: Authentication failed`,
@@ -154,13 +158,24 @@ export const MasterPasswordScreen = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [initVaults, navigation, t])
+  }, [autoSelectVault, initVaults, t])
+
+  useEffect(() => {
+    if (hasAutoPrompted.current) return
+    if (!isBiometricAvailable) return
+    hasAutoPrompted.current = true
+    void handleBiometricRetry()
+  }, [isBiometricAvailable, handleBiometricRetry])
 
   const biometricLabel =
     isFaceID && !isFingerprint
-      ? t`Try again with Face ID`
+      ? biometricAttempted
+        ? t`Try again with Face ID`
+        : t`Unlock with Face ID`
       : isFingerprint
-        ? t`Try again with Fingerprint`
+        ? biometricAttempted
+          ? t`Try again with Fingerprint`
+          : t`Unlock with Fingerprint`
         : null
 
   return (
