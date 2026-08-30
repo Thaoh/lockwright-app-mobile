@@ -14,6 +14,7 @@ import { logger } from '../utils/logger'
  *  biometricTypes: string[] | null,
  *  isBiometricsSupported: boolean,
  *  isBiometricsEnabled: boolean,
+ *  hasCheckedSupport: boolean,
  *  enableBiometrics: () => Promise<{ success: boolean, error?: string }>,
  *  disableBiometrics: () => Promise<{ success: boolean, error?: string }>,
  *  toggleBiometrics: (enabled: boolean) => Promise<{ success: boolean, error?: string }>
@@ -24,6 +25,7 @@ export const useBiometricsAuthentication = () => {
   const [isBiometricsSupported, setIsBiometricsSupported] = useState(false)
   const [isBiometricsEnabled, setIsBiometricsEnabled] = useState(false)
   const [biometricTypes, setBiometricTypes] = useState(null)
+  const [hasCheckedSupport, setHasCheckedSupport] = useState(false)
 
   const enableBiometrics = useCallback(async () => {
     try {
@@ -138,8 +140,17 @@ export const useBiometricsAuthentication = () => {
     const checkBiometricSupport = async () => {
       const hasHardware = await LocalAuthentication.hasHardwareAsync()
       const isEnrolled = await LocalAuthentication.isEnrolledAsync()
+      const supported = hasHardware && isEnrolled
 
-      setIsBiometricsSupported(hasHardware && isEnrolled)
+      setIsBiometricsSupported(supported)
+
+      if (supported) {
+        const supportedTypes =
+          await LocalAuthentication.supportedAuthenticationTypesAsync()
+        setBiometricTypes(supportedTypes)
+      }
+
+      setHasCheckedSupport(true)
     }
 
     const loadUserPref = async () => {
@@ -150,15 +161,7 @@ export const useBiometricsAuthentication = () => {
         }
       )
 
-      const isEnabled = biometricsEnabled === 'true'
-
-      setIsBiometricsEnabled(isEnabled)
-
-      if (isEnabled) {
-        const supportedTypes =
-          await LocalAuthentication.supportedAuthenticationTypesAsync()
-        setBiometricTypes(supportedTypes)
-      }
+      setIsBiometricsEnabled(biometricsEnabled === 'true')
     }
 
     checkBiometricSupport()
@@ -169,6 +172,7 @@ export const useBiometricsAuthentication = () => {
     biometricTypes,
     isBiometricsSupported,
     isBiometricsEnabled,
+    hasCheckedSupport,
     enableBiometrics,
     disableBiometrics,
     toggleBiometrics,

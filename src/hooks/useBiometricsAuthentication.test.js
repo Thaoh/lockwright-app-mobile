@@ -259,6 +259,27 @@ describe('useBiometricsAuthentication', () => {
     expect(result.current.isBiometricsEnabled).toBe(false)
   })
 
+  it('loads biometric types when the OS has enrolled biometrics even if the user skipped enable', async () => {
+    LocalAuthentication.hasHardwareAsync.mockResolvedValue(true)
+    LocalAuthentication.isEnrolledAsync.mockResolvedValue(true)
+    SecureStore.getItemAsync.mockResolvedValue('false')
+    LocalAuthentication.supportedAuthenticationTypesAsync.mockResolvedValue([
+      'fingerprint'
+    ])
+
+    const { result } = renderHook(() => useBiometricsAuthentication(), {
+      wrapper
+    })
+
+    await waitFor(() => {
+      expect(result.current.hasCheckedSupport).toBe(true)
+    })
+
+    expect(result.current.isBiometricsSupported).toBe(true)
+    expect(result.current.isBiometricsEnabled).toBe(false)
+    expect(result.current.biometricTypes).toEqual(['fingerprint'])
+  })
+
   it('should set biometricTypes if enabled', async () => {
     LocalAuthentication.hasHardwareAsync.mockResolvedValue(true)
     LocalAuthentication.isEnrolledAsync.mockResolvedValue(true)

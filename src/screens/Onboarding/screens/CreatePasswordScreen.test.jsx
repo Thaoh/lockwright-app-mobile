@@ -78,7 +78,8 @@ jest.mock('../hooks/usePasswordCreation', () => ({
     passwordsMatch: true,
     canSubmit: true,
     isLoading: false,
-    submit: mockSubmit
+    submit: mockSubmit,
+    values: { password: 'StrongVault#2026' }
   })
 }))
 
@@ -115,6 +116,14 @@ describe('CreatePasswordScreen', () => {
     jest.clearAllMocks()
   })
 
+  it('labels the legal link as the live privacy policy', () => {
+    const { getByTestId } = renderWithProviders(<CreatePasswordScreen />)
+
+    expect(getByTestId('onboarding-terms-link')).toHaveTextContent(
+      'Lockwright Privacy Policy'
+    )
+  })
+
   it('navigates to transfer data flow from the subtitle link', () => {
     const { getByTestId } = renderWithProviders(<CreatePasswordScreen />)
 
@@ -125,16 +134,60 @@ describe('CreatePasswordScreen', () => {
     })
   })
 
-  it('continues to autofill onboarding after successful submit', () => {
+  it('shows which accept rules the password already meets', () => {
+    const { getByTestId } = renderWithProviders(<CreatePasswordScreen />)
+
+    expect(getByTestId('password-accept-checklist')).toBeTruthy()
+    expect(
+      getByTestId('password-accept-rule-minLength').props.accessibilityState
+    ).toEqual({ checked: true })
+    expect(
+      getByTestId('password-accept-rule-hasSymbols').props.accessibilityState
+    ).toEqual({ checked: true })
+  })
+
+  it('does not create the vault until the lost-password warning is confirmed', () => {
+    const { getByTestId, queryByTestId } = renderWithProviders(
+      <CreatePasswordScreen />
+    )
+
+    expect(queryByTestId('lost-password-dialog')).toBeNull()
+
+    fireEvent.press(getByTestId('onboarding-create-password-continue'))
+
+    expect(mockSubmit).not.toHaveBeenCalled()
+    expect(getByTestId('lost-password-dialog')).toBeTruthy()
+  })
+
+  it('continues to autofill onboarding after the lost-password warning is confirmed', () => {
     mockSubmit.mockImplementation((onSuccess) => onSuccess('Master#2026'))
 
     const { getByTestId } = renderWithProviders(<CreatePasswordScreen />)
 
     fireEvent.press(getByTestId('onboarding-create-password-continue'))
+    fireEvent.press(getByTestId('lost-password-confirm'))
 
     expect(mockSubmit).toHaveBeenCalled()
     expect(mockNavigate).toHaveBeenCalledWith('OnboardingAutofill', {
       password: 'Master#2026'
     })
+  })
+
+  it('skips the warning on a later continue after it was already confirmed', () => {
+    mockSubmit.mockImplementation(() => {})
+
+    const { getByTestId, queryByTestId } = renderWithProviders(
+      <CreatePasswordScreen />
+    )
+
+    fireEvent.press(getByTestId('onboarding-create-password-continue'))
+    fireEvent.press(getByTestId('lost-password-confirm'))
+
+    expect(mockSubmit).toHaveBeenCalledTimes(1)
+
+    fireEvent.press(getByTestId('onboarding-create-password-continue'))
+
+    expect(queryByTestId('lost-password-dialog')).toBeNull()
+    expect(mockSubmit).toHaveBeenCalledTimes(2)
   })
 })

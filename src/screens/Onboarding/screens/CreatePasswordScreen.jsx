@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { useLingui } from '@lingui/react/macro'
 import { useNavigation } from '@react-navigation/native'
 import { TERMS_OF_USE } from '@tetherto/pearpass-lib-constants'
@@ -10,13 +12,15 @@ import {
   useTheme
 } from '@tetherto/pearpass-lib-ui-kit'
 import { KeyboardArrowRightFilled } from '@tetherto/pearpass-lib-ui-kit/icons'
-import { Keyboard, StyleSheet, View } from 'react-native'
+import { Keyboard, Modal, Pressable, StyleSheet, View } from 'react-native'
 
 import { NAVIGATION_ROUTES } from '../../../constants/navigation'
 import { AuthFlowFormLayout } from '../../../containers/Auth/shared/AuthFlowFormLayout'
 import { ConfirmablePasswordFields } from '../../../containers/Auth/shared/ConfirmablePasswordFields'
 import { useKeyboardVisibility } from '../../../hooks/useKeyboardVisibility'
+import { getPasswordRuleTicks } from '../../../utils/passwordPolicy'
 import { unsupportedFeaturesEnabled } from '../../../utils/unsupportedFeatures'
+import { PasswordAcceptChecklist } from '../components/PasswordAcceptChecklist'
 import { usePasswordCreation } from '../hooks/usePasswordCreation'
 
 export const CreatePasswordScreen = () => {
@@ -24,6 +28,8 @@ export const CreatePasswordScreen = () => {
   const navigation = useNavigation()
   const { theme } = useTheme()
   const { isKeyboardVisible } = useKeyboardVisibility()
+  const [warningOpen, setWarningOpen] = useState(false)
+  const [warningConfirmed, setWarningConfirmed] = useState(false)
 
   const {
     passwordRegisterProps,
@@ -34,7 +40,8 @@ export const CreatePasswordScreen = () => {
     passwordsMatch,
     canSubmit,
     isLoading,
-    submit
+    submit,
+    values
   } = usePasswordCreation()
 
   const handleTransferData = () => {
@@ -43,10 +50,25 @@ export const CreatePasswordScreen = () => {
     })
   }
 
-  const handleContinue = () => {
+  const createVault = () => {
     submit((password) => {
       navigation.navigate('OnboardingAutofill', { password })
     })
+  }
+
+  const handleContinue = () => {
+    if (!warningConfirmed) {
+      setWarningOpen(true)
+      return
+    }
+
+    createVault()
+  }
+
+  const handleConfirmWarning = () => {
+    setWarningConfirmed(true)
+    setWarningOpen(false)
+    createVault()
   }
 
   return (
@@ -88,7 +110,7 @@ export const CreatePasswordScreen = () => {
                 onClick={() => Keyboard.dismiss()}
                 data-testid="onboarding-terms-link"
               >
-                {t`Lockwright Application Terms of Use`}
+                {t`Lockwright Privacy Policy`}
               </Link>
               .
             </Text>
@@ -117,7 +139,6 @@ export const CreatePasswordScreen = () => {
             value: passwordRegisterProps.value,
             onChangeText: handlePasswordChange,
             passwordIndicator: passwordIndicatorVariant,
-            infoBox: t`Strong passwords are usually at least 8 characters long, hard to guess, use a mix of uppercase and lowercase letters, numbers, and symbols, and aren't based on personal information.`,
             testID: 'onboarding-password-input'
           }}
           confirmPasswordField={{
@@ -131,6 +152,16 @@ export const CreatePasswordScreen = () => {
             testID: 'onboarding-password-confirm-input'
           }}
         />
+        <PasswordAcceptChecklist
+          ticks={getPasswordRuleTicks(values?.password)}
+          labels={{
+            minLength: t`At least 8 characters`,
+            hasLowerCase: t`One lowercase letter`,
+            hasUpperCase: t`One uppercase letter`,
+            hasNumbers: t`One number`,
+            hasSymbols: t`One special character`
+          }}
+        />
         {passwordsMatch && (
           <AlertMessage
             variant="warning"
@@ -140,6 +171,59 @@ export const CreatePasswordScreen = () => {
           />
         )}
       </View>
+      {warningOpen ? (
+        <Modal
+          visible
+          transparent
+          animationType="fade"
+          onRequestClose={() => setWarningOpen(false)}
+        >
+          <Pressable
+            style={styles.dialogBackdrop}
+            onPress={() => setWarningOpen(false)}
+            accessibilityRole="button"
+            accessibilityLabel={t`Go back`}
+          >
+            <Pressable
+              style={[
+                styles.dialogCard,
+                { backgroundColor: theme.colors.colorSurfacePrimary }
+              ]}
+              onPress={(event) => event.stopPropagation()}
+              testID="lost-password-dialog"
+            >
+              <Text as="h3" style={styles.dialogTitle}>
+                {t`We cannot reset this password`}
+              </Text>
+              <Text
+                as="p"
+                color={theme.colors.colorTextSecondary}
+                style={styles.dialogBody}
+              >
+                {t`Other apps can email you a new password. Lockwright cannot. If you lose this Master password, the vault is gone. There is no recovery.`}
+              </Text>
+              <View style={styles.dialogActions}>
+                <Button
+                  variant="tertiary"
+                  fullWidth
+                  onClick={() => setWarningOpen(false)}
+                  data-testid="lost-password-cancel"
+                >
+                  {t`Go back`}
+                </Button>
+                <Button
+                  variant="primary"
+                  fullWidth
+                  onClick={handleConfirmWarning}
+                  data-testid="lost-password-confirm"
+                >
+                  {t`I understand — create vault`}
+                </Button>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      ) : null}
     </AuthFlowFormLayout>
   )
 }
@@ -153,5 +237,25 @@ const styles = StyleSheet.create({
   },
   termsText: {
     textAlign: 'center'
+  },
+  dialogBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: rawTokens.spacing16,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)'
+  },
+  dialogCard: {
+    borderRadius: rawTokens.spacing12,
+    padding: rawTokens.spacing16,
+    gap: rawTokens.spacing12
+  },
+  dialogTitle: {
+    fontWeight: '600'
+  },
+  dialogBody: {
+    lineHeight: 20
+  },
+  dialogActions: {
+    gap: rawTokens.spacing8
   }
 })

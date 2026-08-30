@@ -65,13 +65,13 @@ export const MasterPasswordScreen = () => {
   const { isBiometricsEnabled, isBiometricsSupported, biometricTypes } =
     useBiometricsAuthentication()
 
-  const isBiometricAvailable =
-    isBiometricsEnabled && isBiometricsSupported && biometricTypes?.length > 0
+  const osHasBiometrics = isBiometricsSupported && biometricTypes?.length > 0
+  const canUnlockWithBiometrics = osHasBiometrics && isBiometricsEnabled
 
   const isFaceID =
-    isBiometricAvailable && isFacialRecognitionSupported(biometricTypes)
+    osHasBiometrics && isFacialRecognitionSupported(biometricTypes)
   const isFingerprint =
-    isBiometricAvailable && getIsFingerprintSupported(biometricTypes)
+    osHasBiometrics && getIsFingerprintSupported(biometricTypes)
 
   const schema = Validator.object({
     password: Validator.string().required(t`Password is required`)
@@ -162,10 +162,21 @@ export const MasterPasswordScreen = () => {
 
   useEffect(() => {
     if (hasAutoPrompted.current) return
-    if (!isBiometricAvailable) return
+    if (!canUnlockWithBiometrics) return
     hasAutoPrompted.current = true
     void handleBiometricRetry()
-  }, [isBiometricAvailable, handleBiometricRetry])
+  }, [canUnlockWithBiometrics, handleBiometricRetry])
+
+  const handleBiometricSetup = () => {
+    Toast.show({
+      type: 'baseToast',
+      text1: isFaceID
+        ? t`Unlock with your Master Password, then enable Face ID in Settings.`
+        : t`Unlock with your Master Password, then enable Fingerprint in Settings.`,
+      position: 'bottom',
+      bottomOffset: 100
+    })
+  }
 
   const biometricLabel =
     isFaceID && !isFingerprint
@@ -177,6 +188,13 @@ export const MasterPasswordScreen = () => {
           ? t`Try again with Fingerprint`
           : t`Unlock with Fingerprint`
         : null
+
+  const biometricSetupLabel =
+    isFaceID && !isFingerprint
+      ? t`Set up Face ID`
+      : isFingerprint
+        ? t`Set up Fingerprint`
+        : t`Set up biometrics`
 
   return (
     <OnboardingLayout topGradient avoidBottomInset={isKeyboardVisible}>
@@ -228,12 +246,19 @@ export const MasterPasswordScreen = () => {
 
         <View style={styles.bottomSection}>
           <View style={styles.linkContainer}>
-            {isBiometricAvailable && biometricLabel ? (
+            {canUnlockWithBiometrics && biometricLabel ? (
               <Link
                 onClick={handleBiometricRetry}
                 data-testid="auth-biometric-retry"
               >
                 {biometricLabel}
+              </Link>
+            ) : osHasBiometrics ? (
+              <Link
+                onClick={handleBiometricSetup}
+                data-testid="auth-biometric-setup"
+              >
+                {biometricSetupLabel}
               </Link>
             ) : unsupportedFeaturesEnabled() ? (
               <Link onClick={navigation.goBack} data-testid="auth-pin-retry">

@@ -5,6 +5,7 @@ import {
   getPasswordValidationMessages,
   getPasswordIndicatorVariant,
   getPasswordsMatch,
+  getPasswordRuleTicks,
   getPasswordStrengthMeta
 } from './passwordPolicy'
 import { messages } from '../locales/en/messages'
@@ -40,5 +41,29 @@ describe('passwordPolicy', () => {
     expect(getPasswordsMatch('Vault#2026', 'Vault#2026')).toBe(true)
     expect(getPasswordsMatch('Vault#2026', 'Vault#2027')).toBe(false)
     expect(getPasswordsMatch('Vault#2026', '')).toBe(false)
+  })
+
+  it('ticks only the accept rules the password already meets', () => {
+    expect(getPasswordRuleTicks('')).toEqual({
+      minLength: false,
+      hasLowerCase: false,
+      hasUpperCase: false,
+      hasNumbers: false,
+      hasSymbols: false
+    })
+    expect(getPasswordRuleTicks('Qweqweqw')).toEqual({
+      minLength: true,
+      hasLowerCase: true,
+      hasUpperCase: true,
+      hasNumbers: false,
+      hasSymbols: false
+    })
+    expect(getPasswordRuleTicks('Qweqweqw12?!')).toEqual({
+      minLength: true,
+      hasLowerCase: true,
+      hasUpperCase: true,
+      hasNumbers: true,
+      hasSymbols: true
+    })
   })
 })

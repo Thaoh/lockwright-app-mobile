@@ -15,11 +15,11 @@ describe("Lockwright app id", () => {
     ).toEqual([`group.${APP_ID}`]);
   });
 
-  it("sets Android versionCode past Play's already-used 1", () => {
+  it("sets Android versionCode past Play's already-used 2", () => {
     const app = JSON.parse(
       readFileSync(path.resolve(__dirname, "../app.json"), "utf8"),
     );
-    expect(app.expo.android.versionCode).toBeGreaterThan(1);
+    expect(app.expo.android.versionCode).toBeGreaterThan(2);
     expect(Number.isInteger(app.expo.android.versionCode)).toBe(true);
   });
 

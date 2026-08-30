@@ -32,28 +32,29 @@ export const BiometricsScreen = () => {
   const navigation = useNavigation()
   const route = useRoute()
   const { theme } = useTheme()
-  const { enableBiometrics, isBiometricsSupported, isBiometricsEnabled } =
-    useBiometricsAuthentication()
+  const {
+    enableBiometrics,
+    isBiometricsSupported,
+    isBiometricsEnabled,
+    hasCheckedSupport
+  } = useBiometricsAuthentication()
   const { data: vaultsData } = useVaults()
   const { refetch: refetchVault } = useVault()
   const password = route.params?.password
 
   const biometricsChecked = useRef(false)
 
-  // Skip this screen if biometrics is not supported or already enabled.
-  // Only auto-skip when reached via the real onboarding flow (password param present).
+  // Skip only after the OS check finishes. The hook starts unsupported=false,
+  // so a timed skip would hide this screen on every mid-range phone.
   useEffect(() => {
     if (!password) return
+    if (!hasCheckedSupport) return
     if (biometricsChecked.current) return
-    const timer = setTimeout(() => {
-      biometricsChecked.current = true
-      if (!isBiometricsSupported || isBiometricsEnabled) {
-        finishOnboarding()
-      }
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [isBiometricsSupported, isBiometricsEnabled, password])
+    biometricsChecked.current = true
+    if (!isBiometricsSupported || isBiometricsEnabled) {
+      finishOnboarding()
+    }
+  }, [hasCheckedSupport, isBiometricsSupported, isBiometricsEnabled, password])
 
   const title = isIOS
     ? t`Unlock faster with Face ID`
@@ -120,11 +121,7 @@ export const BiometricsScreen = () => {
   }
 
   return (
-    <OnboardingLayout
-      showLogo={false}
-      rightAction={{ label: t`Not now`, onPress: finishOnboarding }}
-      topGradient
-    >
+    <OnboardingLayout showLogo={false} topGradient>
       <View style={styles.container}>
         <View style={styles.topSection}>
           <View style={styles.riveContainer}>
@@ -170,6 +167,14 @@ export const BiometricsScreen = () => {
           >
             {buttonLabel}
           </Button>
+          <Button
+            variant="tertiary"
+            fullWidth
+            onClick={finishOnboarding}
+            data-testid="onboarding-biometrics-skip"
+          >
+            {t`Not now`}
+          </Button>
         </View>
       </View>
     </OnboardingLayout>
@@ -199,7 +204,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 16,
     paddingBottom: 20,
-    width: '100%'
+    width: '100%',
+    gap: 8
   },
   copyContainer: {
     alignItems: 'center'

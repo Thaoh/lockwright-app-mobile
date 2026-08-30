@@ -195,6 +195,23 @@ describe('MasterPasswordScreen', () => {
     })
   })
 
+  it('shows a fingerprint control when the OS has enrolled biometrics even if the user skipped enable', () => {
+    mockUseBiometricsAuthentication.mockReturnValue({
+      isBiometricsEnabled: false,
+      isBiometricsSupported: true,
+      biometricTypes: [2]
+    })
+    mockIsFacialRecognitionSupported.mockReturnValue(false)
+    mockIsFingerprintSupported.mockReturnValue(true)
+
+    const { getByTestId } = renderScreen()
+
+    expect(mockGetItemAsync).not.toHaveBeenCalled()
+    expect(getByTestId('auth-biometric-setup')).toHaveTextContent(
+      'Set up Fingerprint'
+    )
+  })
+
   it('does not open a fingerprint prompt when biometrics are off', () => {
     mockUseBiometricsAuthentication.mockReturnValue({
       isBiometricsEnabled: false,

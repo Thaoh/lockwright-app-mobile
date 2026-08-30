@@ -87,3 +87,14 @@ export const getPasswordsMatch = (password, confirmPassword) =>
   Boolean(
     password?.length && confirmPassword?.length && password === confirmPassword
   )
+
+export const PASSWORD_ACCEPT_RULE_KEYS = [
+  'minLength',
+  'hasLowerCase',
+  'hasUpperCase',
+  'hasNumbers',
+  'hasSymbols'
+]
+
+export const getPasswordRuleTicks = (password) =>
+  checkPasswordStrength(password || '').rules
