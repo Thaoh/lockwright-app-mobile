@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { useLingui } from '@lingui/react/macro'
 import { useNavigation } from '@react-navigation/native'
-import { TERMS_OF_USE } from '@tetherto/pearpass-lib-constants'
+import { PRIVACY_POLICY } from '@tetherto/pearpass-lib-constants'
 import {
   AlertMessage,
   Button,
@@ -105,7 +105,7 @@ export const CreatePasswordScreen = () => {
             >
               {t`By clicking Continue, you confirm that you have read and agree to the`}{' '}
               <Link
-                href={TERMS_OF_USE}
+                href={PRIVACY_POLICY}
                 isExternal
                 onClick={() => Keyboard.dismiss()}
                 data-testid="onboarding-terms-link"

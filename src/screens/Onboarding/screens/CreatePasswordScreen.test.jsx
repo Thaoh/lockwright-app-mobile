@@ -17,6 +17,11 @@ jest.mock('@react-navigation/native', () => ({
   })
 }))
 
+jest.mock('@tetherto/pearpass-lib-constants', () => ({
+  TERMS_OF_USE: 'https://example.test/terms/',
+  PRIVACY_POLICY: 'https://example.test/privacy/'
+}))
+
 jest.mock('@tetherto/pearpass-lib-ui-kit', () => {
   const RN = require('react-native')
 
@@ -38,8 +43,13 @@ jest.mock('@tetherto/pearpass-lib-ui-kit', () => {
         {children}
       </RN.Text>
     ),
-    Link: ({ children, onClick, 'data-testid': dataTestId }) => (
-      <RN.Pressable testID={dataTestId} onPress={onClick}>
+    Link: ({ children, href, onClick, 'data-testid': dataTestId }) => (
+      <RN.Pressable
+        testID={dataTestId}
+        onPress={onClick}
+        accessibilityRole="link"
+        accessibilityHint={href}
+      >
         <RN.Text>{children}</RN.Text>
       </RN.Pressable>
     ),
@@ -121,6 +131,9 @@ describe('CreatePasswordScreen', () => {
 
     expect(getByTestId('onboarding-terms-link')).toHaveTextContent(
       'Lockwright Privacy Policy'
+    )
+    expect(getByTestId('onboarding-terms-link').props.accessibilityHint).toBe(
+      'https://example.test/privacy/'
     )
   })
 

@@ -28,7 +28,7 @@ describe("Lockwright app id", () => {
       readFileSync(path.resolve(__dirname, "../package.json"), "utf8"),
     );
     expect(pkg.dependencies["@tetherto/pearpass-lib-constants"]).toBe(
-      "git+https://github.com/Thaoh/lockwright-lib-constants.git",
+      "git+https://github.com/Thaoh/lockwright-lib-constants.git#52680e3ab3f9ec5604ce2e12e951275101799de5",
     );
   });
 
