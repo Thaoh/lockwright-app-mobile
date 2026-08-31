@@ -41,6 +41,13 @@ describe("Lockwright app id", () => {
     );
   });
 
+  it("uses package name lockwright-app-mobile, not pearpass-app-mobile", () => {
+    const pkg = JSON.parse(
+      readFileSync(path.resolve(__dirname, "../package.json"), "utf8"),
+    );
+    expect(pkg.name).toBe("lockwright-app-mobile");
+  });
+
   it("ships expo display name Lockwright, not PearPass", () => {
     const app = JSON.parse(
       readFileSync(path.resolve(__dirname, "../app.json"), "utf8"),
