@@ -12,6 +12,7 @@ import {
   TwoFactorAuthenticationOutlined,
   Settings as SettingsIcon,
   SettingsOutlined,
+  SyncLock,
 } from '@tetherto/pearpass-lib-ui-kit/icons'
 import { type GestureResponderEvent, Pressable, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -19,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { DrawerNavigator } from '../DrawerNavigator'
 import { SettingsNavigator } from '../SettingsNavigator'
 import { Authenticator } from '../../screens/Authenticator'
+import { Generator } from '../../screens/Generator'
 import { useVaultSelector } from '../../context/VaultSelectorContext'
 import { showInfoAlertToast } from '../../utils/showInfoAlertToast'
 
@@ -119,6 +121,9 @@ export const TabNavigator = () => {
               ? <TwoFactorAuthenticationFilled color={color} />
               : <TwoFactorAuthenticationOutlined color={color} />
           }
+          if (route.name === 'Generator') {
+            return <SyncLock color={color} />
+          }
           if (route.name === 'Settings') {
             return focused
               ? <SettingsIcon color={color} />
@@ -145,6 +150,7 @@ export const TabNavigator = () => {
 
           const labels: Record<string, string> = {
             Authenticator: 'Authenticator',
+            Generator: 'Generator',
             Settings: 'Settings'
           }
 
@@ -168,6 +174,8 @@ export const TabNavigator = () => {
       {AUTHENTICATOR_ENABLED && (
         <Tab.Screen name="Authenticator" component={Authenticator} />
       )}
+
+      <Tab.Screen name="Generator" component={Generator} />
 
       <Tab.Screen name="Settings" component={SettingsNavigator} />
     </Tab.Navigator>

@@ -15,11 +15,11 @@ describe("Lockwright app id", () => {
     ).toEqual([`group.${APP_ID}`]);
   });
 
-  it("sets Android versionCode past Play's already-used 2", () => {
+  it("sets Android versionCode past Play's already-used 3", () => {
     const app = JSON.parse(
       readFileSync(path.resolve(__dirname, "../app.json"), "utf8"),
     );
-    expect(app.expo.android.versionCode).toBeGreaterThan(2);
+    expect(app.expo.android.versionCode).toBeGreaterThan(3);
     expect(Number.isInteger(app.expo.android.versionCode)).toBe(true);
   });
 
@@ -240,6 +240,20 @@ describe("Lockwright app id", () => {
     expect(generator).toMatch(/lowercaseLetters/);
     expect(generator).toMatch(/PASSWORD_SLIDER_MAX = 128/);
     expect(generator).toMatch(/markHistoryUsed/);
+  });
+
+  it("tab bar places Generator between Authenticator and Settings", () => {
+    const tab = readFileSync(
+      path.resolve(__dirname, "./app/TabNavigator/index.tsx"),
+      "utf8",
+    );
+    const authenticator = tab.indexOf('name="Authenticator"');
+    const generator = tab.indexOf('name="Generator"');
+    const settings = tab.indexOf('name="Settings"');
+    expect(authenticator).toBeGreaterThan(-1);
+    expect(generator).toBeGreaterThan(authenticator);
+    expect(settings).toBeGreaterThan(generator);
+    expect(tab).toMatch(/component=\{Generator\}/);
   });
 
   it("app.config.ts has one default export and no leftover tail", () => {

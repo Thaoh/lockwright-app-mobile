@@ -13,7 +13,9 @@ import {
   Text,
   useTheme
 } from '@tetherto/pearpass-lib-ui-kit'
+import * as Clipboard from 'expo-clipboard'
 import { Linking, StyleSheet, View } from 'react-native'
+import Toast from 'react-native-toast-message'
 
 import { Layout } from '../../../containers/Layout'
 import { BackScreenHeader } from '../../../containers/ScreenHeader/BackScreenHeader'
@@ -23,6 +25,20 @@ export const About = () => {
   const { t } = useLingui()
   const navigation = useNavigation()
   const { theme } = useTheme()
+  const displayVersion = getDisplayVersion()
+
+  const copyDisplayVersion = () => {
+    void Clipboard.setStringAsync(displayVersion)
+      .then(() => {
+        Toast.show({
+          type: 'baseToast',
+          text1: t`Copied!`,
+          position: 'bottom',
+          bottomOffset: 100
+        })
+      })
+      .catch(() => {})
+  }
 
   return (
     <Layout
@@ -78,11 +94,13 @@ export const About = () => {
         ]}
       >
         <NavbarListItem
+          testID="app-version-row"
           label={t`App version`}
           size="big"
+          onClick={copyDisplayVersion}
           additionalItems={
             <Text variant="label" color={theme.colors.colorPrimary}>
-              {getDisplayVersion()}
+              {displayVersion}
             </Text>
           }
         />

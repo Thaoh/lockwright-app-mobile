@@ -25,6 +25,7 @@ import {
 import { css } from 'react-strict-dom'
 import { Pressable, StyleSheet, View } from 'react-native'
 
+import { ScreenHeader } from '../../containers/ScreenHeader'
 import { BackScreenHeader } from '../../containers/ScreenHeader/BackScreenHeader'
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
 import { ContentCopy } from '@tetherto/pearpass-lib-ui-kit/icons'
@@ -152,6 +153,7 @@ type CreatePasswordItemProps = {
     params?: {
       onPasswordInsert?: (value: string) => void
       historyContext?: HistoryContext | null
+      hideBack?: boolean
     }
   }
 }
@@ -163,6 +165,7 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
   const { copyToClipboard } = useCopyToClipboard()
   const onPasswordInsert = route?.params?.onPasswordInsert
   const historyContext = route?.params?.historyContext
+  const hideBack = route?.params?.hideBack === true
 
   const [selectedOption, setSelectedOption] = useState<PasswordOption>(
     PASSWORD_OPTIONS.password
@@ -331,10 +334,18 @@ export const CreatePasswordItem = ({ route }: CreatePasswordItemProps) => {
       disableKeyboardAvoidance
       contentStyle={styles.content}
       header={
-        <BackScreenHeader
-          title={onPasswordInsert ? t`New Password Item` : t`Generator`}
-          onBack={() => navigation.goBack()}
-        />
+        hideBack ? (
+          <ScreenHeader
+            centerSlot={
+              <Text variant="bodyEmphasized">{t`Generator`}</Text>
+            }
+          />
+        ) : (
+          <BackScreenHeader
+            title={onPasswordInsert ? t`New Password Item` : t`Generator`}
+            onBack={() => navigation.goBack()}
+          />
+        )
       }
       footer={
         <Button
