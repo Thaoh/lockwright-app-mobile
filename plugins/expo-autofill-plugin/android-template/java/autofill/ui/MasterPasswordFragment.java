@@ -53,6 +53,9 @@ public class MasterPasswordFragment extends BaseAutofillFragment {
         // This ensures we can authenticate again without lock conflicts.
         // Skip in registration mode (PasskeyRegistrationActivity) since vault lifecycle
         // is managed by the registration activity itself.
+        if (isAuthenticatingBiometric) {
+            return;
+        }
         if (vaultClient != null && getActivity() instanceof AuthenticationActivity) {
             CompletableFuture.runAsync(() -> {
                 try {

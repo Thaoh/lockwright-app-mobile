@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.pears.pass.R;
@@ -34,6 +33,7 @@ import com.pears.pass.autofill.utils.AutofillConstants;
 import com.pears.pass.autofill.utils.IdentityFillPlan;
 import com.pears.pass.autofill.utils.LoginFillPlan;
 import com.pears.pass.autofill.utils.SecureLog;
+import com.pears.pass.autofill.utils.AutofillHostTeardown;
 import com.pears.pass.autofill.utils.VaultInitializer;
 
 import org.json.JSONObject;
@@ -647,50 +647,19 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
     @Override
     protected void onPause() {
         super.onPause();
-        SecureLog.d(TAG, "Activity paused - resetting to initial state");
-
-        // Clean up vault client to release database
-        cleanup();
-
-        // Reset all state variables to initial values
-        isInitializing.set(false);
-        hasNavigated.set(false); // Reset navigation flag
-        hasInitializedOnce = false;
-        hasPasswordSet = false;
-        isLoggedIn = false;
-        isVaultOpen = false;
-        isLoading = true;
-        initRetryCount = 0; // Reset retry counter
-
-        // Clear fragment back stack to reset UI state
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        if (fragmentManager.getBackStackEntryCount() > 0) {
-            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        // BiometricPrompt pauses this host without finishing it. Do not
+        // close the worklet or strip the fill sheet here.
+        if (AutofillHostTeardown.shouldReleaseWorklet(isFinishing())) {
+            cleanup();
         }
-
-        // Clear all fragments
-        Fragment currentFragment = fragmentManager.findFragmentById(R.id.fragment_container);
-        if (currentFragment != null) {
-            fragmentManager.beginTransaction()
-                .remove(currentFragment)
-                .commitNow();
-        }
-
-        SecureLog.d(TAG, "Extension completely reset to initial state");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        SecureLog.d(TAG, "Activity resumed - starting fresh initialization");
-
-        // Show loading fragment - user must stay in loading state until initialization completes
-        getSupportFragmentManager().beginTransaction()
-            .replace(R.id.fragment_container, new LoadingFragment())
-            .commitNow();
-
-        // Always re-initialize from scratch as if opening for the first time
-        initialize();
+        if (vaultClient == null && !isFinishing()) {
+            initialize();
+        }
     }
 
     /**
@@ -920,7 +889,7 @@ public class AuthenticationActivity extends AppCompatActivity implements Navigat
 
         // Only cleanup if the activity is actually finishing
         // Don't cleanup if user just backgrounds the app - they might resume
-        if (isFinishing()) {
+        if (AutofillHostTeardown.shouldReleaseWorklet(isFinishing())) {
             SecureLog.d(TAG, "Activity is finishing, performing cleanup");
             cleanup();
         } else {

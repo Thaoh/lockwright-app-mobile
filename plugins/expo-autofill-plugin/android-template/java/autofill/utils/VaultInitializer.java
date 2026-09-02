@@ -86,18 +86,32 @@ public class VaultInitializer {
     public static CompletableFuture<VaultInitState> initializeUser(PearPassVaultClient client) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                // Get vault status and active vault status
-                PearPassVaultClient.VaultStatus vaultsStatus = client.vaultsGetStatus().get();
+                long startedAt = System.currentTimeMillis();
+                PearPassVaultClient.VaultStatus vaultsStatus;
+                PearPassVaultClient.MasterPasswordEncryption encryption;
+                boolean encryptionMaterial;
+                while (true) {
+                    vaultsStatus = client.vaultsGetStatus().get();
+                    encryption = client.getMasterPasswordEncryption(vaultsStatus).get();
+                    encryptionMaterial = encryption != null &&
+                            encryption.ciphertext != null &&
+                            encryption.nonce != null &&
+                            encryption.salt != null;
+                    long elapsed = System.currentTimeMillis() - startedAt;
+                    if (!VaultStoreReady.keepWaiting(
+                            vaultsStatus.isInitialized, encryptionMaterial, elapsed)) {
+                        break;
+                    }
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+
                 PearPassVaultClient.VaultStatus activeVaultStatus = client.activeVaultGetStatus().get();
 
-                // Get master password encryption
-                PearPassVaultClient.MasterPasswordEncryption encryption =
-                        client.getMasterPasswordEncryption(vaultsStatus).get();
-
-                boolean encryptionMaterial = encryption != null &&
-                        encryption.ciphertext != null &&
-                        encryption.nonce != null &&
-                        encryption.salt != null;
                 boolean hasPasswordSet = PasswordSetGate.decide(
                         vaultsStatus.isInitialized, encryptionMaterial);
 
