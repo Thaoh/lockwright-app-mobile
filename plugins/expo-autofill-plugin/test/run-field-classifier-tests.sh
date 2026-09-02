@@ -24,6 +24,11 @@ javac -d "$TMP" \
 java -cp "$TMP" com.pears.pass.autofill.utils.VaultMigrationGateTest
 
 javac -d "$TMP" \
+  "$ROOT/android-template/java/autofill/utils/PasswordSetGate.java" \
+  "$ROOT/test/PasswordSetGateTest.java"
+java -cp "$TMP" com.pears.pass.autofill.utils.PasswordSetGateTest
+
+javac -d "$TMP" \
   "$ROOT/android-template/java/autofill/utils/LoginFillPlan.java" \
   "$ROOT/test/LoginFillPlanTest.java"
 java -cp "$TMP" com.pears.pass.autofill.utils.LoginFillPlanTest
@@ -48,6 +53,9 @@ javac -d "$TMP" \
   "$ROOT/android-template/java/autofill/utils/IdentityFillPlan.java" \
   "$ROOT/test/IdentityFillPlanTest.java"
 java -cp "$TMP" com.pears.pass.autofill.utils.IdentityFillPlanTest
+
+INIT="$ROOT/android-template/java/autofill/utils/VaultInitializer.java"
+grep -q 'PasswordSetGate.decide' "$INIT"
 
 CLIENT="$ROOT/android-template/java/autofill/data/PearPassVaultClient.java"
 grep -q 'RecordStoreKeys.recordKeyV2' "$CLIENT"

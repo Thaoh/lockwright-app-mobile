@@ -358,10 +358,13 @@ struct HostView: View {
             let vaultsStatusRes = try await client.vaultsGetStatus()
             let masterPasswordEncryption = try await client.getMasterPasswordEncryption(vaultStatus: vaultsStatusRes)
 
-            let passwordSet = masterPasswordEncryption != nil &&
+            let encryptionMaterial = masterPasswordEncryption != nil &&
                               masterPasswordEncryption?.ciphertext != nil &&
                               masterPasswordEncryption?.nonce != nil &&
                               masterPasswordEncryption?.salt != nil
+            // Unlock to fill opens the store locked; blobs are only readable
+            // while unlocked. isInitialized means a password already exists.
+            let passwordSet = vaultsStatusRes.isInitialized || encryptionMaterial
 
             // Mirrors V1 — registration mode (PasskeyRegistrationView) skips
             // the master-password prompt when the vault is already unlocked

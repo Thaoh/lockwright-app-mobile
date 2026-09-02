@@ -94,11 +94,12 @@ public class VaultInitializer {
                 PearPassVaultClient.MasterPasswordEncryption encryption =
                         client.getMasterPasswordEncryption(vaultsStatus).get();
 
-                // Check if password is set
-                boolean hasPasswordSet = encryption != null &&
+                boolean encryptionMaterial = encryption != null &&
                         encryption.ciphertext != null &&
                         encryption.nonce != null &&
                         encryption.salt != null;
+                boolean hasPasswordSet = PasswordSetGate.decide(
+                        vaultsStatus.isInitialized, encryptionMaterial);
 
                 // Check if user is logged in (vault is initialized and unlocked)
                 boolean isLoggedIn = vaultsStatus.isInitialized && !vaultsStatus.isLocked;
@@ -163,12 +164,14 @@ public class VaultInitializer {
      */
     public static boolean tryCheckPasswordSet(PearPassVaultClient client) {
         try {
+            PearPassVaultClient.VaultStatus status = client.vaultsGetStatus().get();
             PearPassVaultClient.MasterPasswordEncryption encryption =
-                    client.getMasterPasswordEncryption(null).get();
-            return encryption != null &&
+                    client.getMasterPasswordEncryption(status).get();
+            boolean encryptionMaterial = encryption != null &&
                     encryption.ciphertext != null &&
                     encryption.nonce != null &&
                     encryption.salt != null;
+            return PasswordSetGate.decide(status.isInitialized, encryptionMaterial);
         } catch (Exception e) {
             SecureLog.e(TAG, "Could not check password status: " + e.getMessage());
             return false;
