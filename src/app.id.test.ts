@@ -177,6 +177,82 @@ describe("Lockwright app id", () => {
     }
   });
 
+  it("Unlock-to-fill uses hatch dusk, not PearPass lime", () => {
+    const pearLime =
+      /#B0D944|#BADE5B|#3A4A1A|#080A05|#15180E|#37431D|#8AE081|#FDCA40|#98C328|#BAE061|#BDC3AC|#435123/i;
+    const androidColors = readFileSync(
+      path.resolve(
+        __dirname,
+        "../plugins/expo-autofill-plugin/android-template/res/values/colors.xml",
+      ),
+      "utf8",
+    );
+    const iosColors = readFileSync(
+      path.resolve(
+        __dirname,
+        "../plugins/expo-autofill-plugin/ios-template/PearPassAutofillExtension/Tokens/PPColors.swift",
+      ),
+      "utf8",
+    );
+    const missing = readFileSync(
+      path.resolve(
+        __dirname,
+        "../plugins/expo-autofill-plugin/android-template/res/layout/fragment_missing_configuration.xml",
+      ),
+      "utf8",
+    );
+    const errorIcon = readFileSync(
+      path.resolve(
+        __dirname,
+        "../plugins/expo-autofill-plugin/android-template/res/drawable/pp_ic_error.xml",
+      ),
+      "utf8",
+    );
+    const androidLogo = readFileSync(
+      path.resolve(
+        __dirname,
+        "../plugins/expo-autofill-plugin/android-template/res/drawable/pp_ic_app_logo.xml",
+      ),
+      "utf8",
+    );
+    const leftover = [
+      path.resolve(
+        __dirname,
+        "../plugins/expo-autofill-plugin/android-template/res/drawable/primary_button.xml",
+      ),
+      path.resolve(
+        __dirname,
+        "../plugins/expo-autofill-plugin/android-template/res/drawable/secondary_button.xml",
+      ),
+      path.resolve(
+        __dirname,
+        "../plugins/expo-autofill-plugin/android-template/res/layout/fragment_existing_credential_selection.xml",
+      ),
+      path.resolve(
+        __dirname,
+        "../plugins/expo-autofill-plugin/ios-template/PearPassAutofillExtension/PPAssets.xcassets/Icons/ErrorIcon.imageset/error_icon.svg",
+      ),
+    ].map((file) => readFileSync(file, "utf8"));
+
+    expect(androidColors).toMatch(/pp_primary">#FFB08D57</i);
+    expect(androidColors).toMatch(/pp_background">#FF08090B</i);
+    expect(androidColors).toMatch(/pp_surface_primary">#FF14161B</i);
+    expect(androidColors).not.toMatch(pearLime);
+    expect(iosColors).toMatch(/primary = Color\(hex: 0xB08D57\)/);
+    expect(iosColors).toMatch(/background = Color\(hex: 0x08090B\)/);
+    expect(iosColors).toMatch(/surfacePrimary = Color\(hex: 0x14161B\)/);
+    expect(iosColors).not.toMatch(pearLime);
+    expect(missing).toMatch(/Finish setting up Lockwright/);
+    expect(missing).not.toMatch(/PearPass/);
+    expect(errorIcon).not.toMatch(pearLime);
+    expect(androidLogo).toMatch(/#b08d57|#FFB08D57/i);
+    expect(androidLogo).not.toMatch(/M26\.5335/);
+    expect(androidLogo).not.toMatch(pearLime);
+    for (const src of leftover) {
+      expect(src).not.toMatch(pearLime);
+    }
+  });
+
   it("Play listing is Lockwright with a 512 icon", () => {
     const title = readFileSync(
       path.resolve(__dirname, "../metadata/en-US/title.txt"),
