@@ -11,15 +11,16 @@ Starts at 0.0.17, after the Lockwright package rename. Earlier history is git.
 
 ## [0.0.19] - 2026-09-04
 
-`e625f708aab3d18fb009612194a83db17e66b0ee`
+`5adbf7d9490cadf272f66864bba042717b44313e`
 
 ### Changed
 
-- Play versionCode 8, then 9.
+- Play versionCode 8, then 9, then 10.
 
 ### Fixed
 
 - Unlock-to-fill no longer generates a TOTP for every login before URI search.
+- Authenticator asks for OTP codes. Home list does not.
 
 ## [0.0.18] - 2026-09-02
 
@@ -42,7 +43,7 @@ Starts at 0.0.17, after the Lockwright package rename. Earlier history is git.
 
 - A locked initialized vault counts as set up. Unlock-to-fill setup no longer loops.
 
-[unreleased]: https://github.com/Thaoh/lockwright-app-mobile/compare/e625f708aab3d18fb009612194a83db17e66b0ee...HEAD
-[0.0.19]: https://github.com/Thaoh/lockwright-app-mobile/compare/ea23b521f63467ebebb11c3a1db471f11763ba37...e625f708aab3d18fb009612194a83db17e66b0ee
+[unreleased]: https://github.com/Thaoh/lockwright-app-mobile/compare/5adbf7d9490cadf272f66864bba042717b44313e...HEAD
+[0.0.19]: https://github.com/Thaoh/lockwright-app-mobile/compare/ea23b521f63467ebebb11c3a1db471f11763ba37...5adbf7d9490cadf272f66864bba042717b44313e
 [0.0.18]: https://github.com/Thaoh/lockwright-app-mobile/compare/9da0527af89de74b9b5f37409c5b6fc339ac8e73...ea23b521f63467ebebb11c3a1db471f11763ba37
 [0.0.17]: https://github.com/Thaoh/lockwright-app-mobile/compare/1f2fa5c1e1a77bc55ad6b41fd6568fc1567e6c4e...9da0527af89de74b9b5f37409c5b6fc339ac8e73
