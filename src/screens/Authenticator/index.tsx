@@ -22,6 +22,7 @@ import {
   formatOtpCode,
   groupOtpRecords,
   isExpiring,
+  useOtpWatch,
   useRecords
 } from '@tetherto/pearpass-lib-vault'
 import { MOBILE_2FA_IMPORTS_ENABLED } from '@tetherto/pearpass-lib-constants'
@@ -77,6 +78,7 @@ type Section =
   | { type: 'record'; key: string; record: RecordWithOtp }
 
 export const Authenticator = () => {
+  useOtpWatch('all')
   const { t } = useLingui()
   const navigation = useNavigation() as {
     navigate: (screen: string, params?: object) => void

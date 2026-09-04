@@ -250,6 +250,8 @@ declare module '@tetherto/pearpass-lib-vault' {
 
   export function useOtpRefresh(): (() => void) | null
 
+  export function useOtpWatch(scope: 'all' | string | null | undefined): void
+
   export function useTimerAnimation(
     timeRemaining: number | null,
     period: number,
