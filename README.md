@@ -4,11 +4,11 @@
 
 # Lockwright Mobile
 
-> The mobile app for Lockwright, an open-source, end-to-end encrypted password and identity manager built on Pear Runtime.
+> Mobile app for Lockwright. Local vaults, peer-to-peer sync.
 
 Site: [lockwright.dexterity.works](https://lockwright.dexterity.works)
 
-Community fork of PearPass (Apache 2.0). Not affiliated with or endorsed by Tether Data or the Pears project. This GitHub repo stays a fork of `tetherto/pearpass-app-mobile` on purpose. Do not open pull requests against Tether.
+Community fork of PearPass (Apache 2.0). Not affiliated with or endorsed by Tether Data or the Pears project.
 
 ---
 
@@ -17,6 +17,7 @@ Community fork of PearPass (Apache 2.0). Not affiliated with or endorsed by Teth
 - [Introduction](#introduction)
 - [Features](#features)
 - [Installation](#installation)
+- [Changelog](CHANGELOG.md)
 - [Usage Examples](#usage-examples)
 - [Architecture](#architecture)
 - [Starting the Application](#starting-the-application)
@@ -33,9 +34,7 @@ Community fork of PearPass (Apache 2.0). Not affiliated with or endorsed by Teth
 
 ## Introduction
 
-Lockwright is an open-source, privacy-first password and identity manager. It encrypts and stores all data locally on your device.
-
-Unlike traditional password managers that rely on centralized servers, Lockwright is built on [Pear Runtime](https://pears.com/) and uses peer-to-peer technology to sync your credentials directly between your devices. No cloud account. The credentials stay under your control.
+Lockwright encrypts the vault on this device. Devices sync with each other. There is no cloud account.
 
 The on-disk vault at the fork point is PearPass's. Vault work in this tree aims to open those vaults in place. Test that on a copy.
 
@@ -196,7 +195,7 @@ See [`e2e/SETUP_AND_RUN_GUIDE.md`](e2e/SETUP_AND_RUN_GUIDE.md) for the full setu
 
 ## Contributing
 
-Open issues and pull requests on this repo (`Thaoh/lockwright-app-mobile`). Do not open PRs against `tetherto/pearpass-app-mobile`. See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+Issues and pull requests are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ---
 
