@@ -565,7 +565,7 @@ import Foundation
 
         let result = try await sendRequest(
             command: API.ACTIVE_VAULT_LIST.rawValue,
-            data: ["filterKey": filter]
+            data: ["filterKey": filter, "includeOtpCodes": false]
         )
 
         var rawRecords: [[String: Any]] = []

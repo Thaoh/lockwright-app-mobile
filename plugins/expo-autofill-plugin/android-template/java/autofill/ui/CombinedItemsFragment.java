@@ -38,6 +38,7 @@ import com.pears.pass.autofill.jobs.JobEncryption;
 import com.pears.pass.autofill.jobs.JobFileManager;
 import com.pears.pass.autofill.jobs.UpdatePasskeyPayload;
 import com.pears.pass.autofill.utils.AutofillConstants;
+import com.pears.pass.autofill.utils.AutofillSheetLoad;
 import com.pears.pass.autofill.utils.ChipFillDecision;
 import com.pears.pass.autofill.utils.SecureBufferUtils;
 import com.pears.pass.autofill.utils.SecureLog;
@@ -364,7 +365,8 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
                 allCredentials.clear();
                 allCredentials.addAll(cached);
                 hasUserSearched = false;
-                applyFilter(searchInput != null ? searchInput.getText().toString() : "");
+                applyFilter(AutofillSheetLoad.searchQuery(
+                        searchInput != null ? searchInput.getText() : null));
             }
         }
         if (vaultClient == null) {
@@ -468,21 +470,19 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
 
                 if (getActivity() == null) return;
                 final List<CredentialItem> finalParsed = parsed;
-                maybeGenerateTotpCodes(finalParsed).whenComplete((ignored, error) -> {
-                    if (getActivity() == null) return;
-                    getActivity().runOnUiThread(() -> {
-                        allCredentials.clear();
-                        allCredentials.addAll(finalParsed);
-                        hasUserSearched = false;
-                        hidePasswordPrompt();
-                        if (MODE_ASSERTION.equals(mode)) {
-                            AutofillUnlockSession.get().unlock(
-                                    finalParsed,
-                                    AutofillConstants.UNLOCK_SESSION_TTL_MS
-                            );
-                        }
-                        applyFilter(searchInput.getText().toString());
-                    });
+                getActivity().runOnUiThread(() -> {
+                    allCredentials.clear();
+                    allCredentials.addAll(finalParsed);
+                    hasUserSearched = false;
+                    hidePasswordPrompt();
+                    if (MODE_ASSERTION.equals(mode)) {
+                        AutofillUnlockSession.get().unlock(
+                                finalParsed,
+                                AutofillConstants.UNLOCK_SESSION_TTL_MS
+                        );
+                    }
+                    applyFilter(AutofillSheetLoad.searchQuery(
+                            searchInput != null ? searchInput.getText() : null));
                 });
             } catch (Exception e) {
                 handleAsyncError(TAG, "unlockAndLoad failed: " + e.getMessage(), () -> {
@@ -542,37 +542,14 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
     }
 
     private void maybeAutoSelectPreselect(List<CredentialItem> visible) {
-        if (preselectRecordId == null || preselectRecordId.isEmpty()) return;
-        if (!isPasskeyAssertionMode()) return;
         for (CredentialItem c : visible) {
-            if (preselectRecordId.equals(c.getId()) && c.hasPasskey()) {
-                preselectRecordId = null;
-                handleCredentialClick(c);
-                return;
-            }
+            if (c == null) continue;
+            if (!AutofillSheetLoad.isPreselect(preselectRecordId, c.getId())) continue;
+            if (isPasskeyAssertionMode() && !c.hasPasskey()) continue;
+            preselectRecordId = null;
+            handleCredentialClick(c);
+            return;
         }
-    }
-
-    private CompletableFuture<Void> maybeGenerateTotpCodes(List<CredentialItem> items) {
-        if (!showTotp || vaultClient == null || items == null || items.isEmpty()) {
-            return CompletableFuture.completedFuture(null);
-        }
-        List<CompletableFuture<Void>> gens = new ArrayList<>();
-        for (CredentialItem item : items) {
-            if (item == null || !item.hasOtp()) continue;
-            gens.add(vaultClient.generateOtpCode(item.getId()).handle((code, error) -> {
-                if (error != null) {
-                    SecureLog.e(TAG, "OTP generate failed", error);
-                } else if (code != null) {
-                    item.setOtpCode(code);
-                }
-                return null;
-            }));
-        }
-        if (gens.isEmpty()) {
-            return CompletableFuture.completedFuture(null);
-        }
-        return CompletableFuture.allOf(gens.toArray(new CompletableFuture[0]));
     }
 
     private List<CredentialItem> filterInitial(List<CredentialItem> all) {
@@ -830,7 +807,8 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
             CredentialItem item = new CredentialItem(id, name, uname, pwd, websites,
                     hasPasskey, passkeyCreatedAt, credentialMap, privateKeyBuffer, userIdStr, credentialId);
             item.setUris(uris);
-            item.setHasOtp(ChipFillDecision.recordHasOtp(data.get("otp"), null));
+            item.setHasOtp(ChipFillDecision.recordHasOtp(
+                    data.get("otp"), null, record.get("otpPublic")));
             credentials.add(item);
 
             rawRecordsById.put(id, record);

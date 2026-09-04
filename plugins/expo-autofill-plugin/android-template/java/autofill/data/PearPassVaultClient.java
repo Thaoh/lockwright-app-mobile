@@ -686,7 +686,10 @@ public class PearPassVaultClient {
         String filter = filterKey != null ? filterKey : "record/";
         log("Listing active vault records with filter: " + filter);
 
-        return sendRequest(API.ACTIVE_VAULT_LIST.getValue(), createMap("filterKey", filter))
+        Map<String, Object> params = new HashMap<>();
+        params.put("filterKey", filter);
+        params.put("includeOtpCodes", false);
+        return sendRequest(API.ACTIVE_VAULT_LIST.getValue(), params)
                 .thenApply(result -> {
                     if (result != null) {
                         if (result.containsKey("array")) {

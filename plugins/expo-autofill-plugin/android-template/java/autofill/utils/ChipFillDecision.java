@@ -26,8 +26,18 @@ public final class ChipFillDecision {
     }
 
     public static boolean recordHasOtp(Object otp, String otpCode) {
+        return recordHasOtp(otp, otpCode, null);
+    }
+
+    public static boolean recordHasOtp(Object otp, String otpCode, Object otpPublic) {
         if (otpCode != null && !otpCode.isEmpty()) {
             return true;
+        }
+        if (otpPublic instanceof Map) {
+            Object type = ((Map<?, ?>) otpPublic).get("type");
+            if ("TOTP".equals(type) || "HOTP".equals(type)) {
+                return true;
+            }
         }
         if (!(otp instanceof Map)) {
             return false;

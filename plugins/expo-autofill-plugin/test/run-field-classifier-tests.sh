@@ -44,9 +44,14 @@ javac -d "$TMP" \
 java -cp "$TMP" com.pears.pass.autofill.utils.LoginFillPlanTest
 
 javac -d "$TMP" \
-  "$ROOT/android-template/java/autofill/utils/ChipFillDecision.java" \
-  "$ROOT/test/ChipFillDecisionTest.java"
+    "$ROOT/android-template/java/autofill/utils/ChipFillDecision.java" \
+    "$ROOT/test/ChipFillDecisionTest.java"
 java -cp "$TMP" com.pears.pass.autofill.utils.ChipFillDecisionTest
+
+javac -d "$TMP" \
+    "$ROOT/android-template/java/autofill/utils/AutofillSheetLoad.java" \
+    "$ROOT/test/AutofillSheetLoadTest.java"
+java -cp "$TMP" com.pears.pass.autofill.utils.AutofillSheetLoadTest
 
 javac -d "$TMP" \
   "$ROOT/android-template/java/autofill/utils/UriMatchHelper.java" \
@@ -78,6 +83,10 @@ grep -A20 'listCanonicalRecords()' "$CLIENT" | grep -q 'waitForVaultMigration'
 grep -q 'GENERATE_OTP_CODES_BY_IDS(56)' "$CLIENT"
 grep -q 'generateOtpCode' "$CLIENT"
 grep -q 'OtpCodeResponse.codeFor' "$CLIENT"
+grep -q 'includeOtpCodes' "$CLIENT" || {
+  echo "autofill list must skip TOTP generation on ACTIVE_VAULT_LIST" >&2
+  exit 1
+}
 
 AUTH="$ROOT/android-template/java/autofill/ui/AuthenticationActivity.java"
 # BiometricPrompt pauses the fill host. Tearing down the worklet or UI
@@ -118,6 +127,24 @@ grep -q 'EXTRA_PRESELECT_RECORD_ID' "$SERVICE"
 COMBINED="$ROOT/android-template/java/autofill/ui/CombinedItemsFragment.java"
 grep -q 'TYPE_IDENTITY' "$COMBINED"
 grep -q 'fullName' "$COMBINED"
+grep -q 'AutofillSheetLoad.searchQuery' "$COMBINED" || {
+  echo "CombinedItems must read search text through AutofillSheetLoad.searchQuery" >&2
+  exit 1
+}
+grep -q 'AutofillSheetLoad.isPreselect' "$COMBINED" || {
+  echo "CombinedItems must auto-select keyboard-chip logins via AutofillSheetLoad.isPreselect" >&2
+  exit 1
+}
+if grep -q 'maybeGenerateTotpCodes' "$COMBINED"; then
+  echo "CombinedItems must not generate TOTP for the whole vault before showing the list" >&2
+  exit 1
+fi
+
+IOS_CLIENT="$ROOT/ios-template/PearPassAutofillExtension/PearPassVaultClient.swift"
+grep -q 'includeOtpCodes' "$IOS_CLIENT" || {
+  echo "iOS autofill list must skip TOTP generation on ACTIVE_VAULT_LIST" >&2
+  exit 1
+}
 
 MASTER="$ROOT/android-template/java/autofill/ui/MasterPasswordFragment.java"
 master_resume="$(awk '/void onResume\(/,/void onCreateView/' "$MASTER")"

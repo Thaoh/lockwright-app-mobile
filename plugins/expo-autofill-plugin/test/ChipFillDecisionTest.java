@@ -14,6 +14,7 @@ public final class ChipFillDecisionTest {
         opensAppOnlyWhenOtpFieldAndRecordHaveTotp();
         subtitleShowsTotpWhenChipWillOpenApp();
         recordHasOtpFromSecretOrCachedCode();
+        recordHasOtpFromListedOtpPublic();
 
         if (failures > 0) {
             System.err.println(failures + " ChipFillDecision checks failed");
@@ -50,6 +51,16 @@ public final class ChipFillDecisionTest {
         expect("cached code counts", ChipFillDecision.recordHasOtp(null, "123456"), true);
         expect("empty otp does not", ChipFillDecision.recordHasOtp(new HashMap<>(), ""), false);
         expect("null does not", ChipFillDecision.recordHasOtp(null, null), false);
+    }
+
+    private static void recordHasOtpFromListedOtpPublic() {
+        Map<String, Object> otpPublic = new HashMap<>();
+        otpPublic.put("type", "TOTP");
+        expect("listed otpPublic counts",
+                ChipFillDecision.recordHasOtp(null, null, otpPublic), true);
+        Map<String, Object> emptyPublic = new HashMap<>();
+        expect("empty otpPublic does not",
+                ChipFillDecision.recordHasOtp(null, null, emptyPublic), false);
     }
 
     private static void expect(String label, Object got, Object want) {
