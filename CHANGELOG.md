@@ -11,7 +11,7 @@ Starts at 0.0.17, after the Lockwright package rename. Earlier history is git.
 
 ## [0.0.20] - 2026-09-05
 
-`BUMP_SHA`
+`00ca6a1ef5fd79cab19fc35ea33d514a21e51c7d`
 
 ### Changed
 
@@ -51,8 +51,8 @@ Starts at 0.0.17, after the Lockwright package rename. Earlier history is git.
 
 - A locked initialized vault counts as set up. Unlock-to-fill setup no longer loops.
 
-[unreleased]: https://github.com/Thaoh/lockwright-app-mobile/compare/BUMP_SHA...HEAD
-[0.0.20]: https://github.com/Thaoh/lockwright-app-mobile/compare/5adbf7d9490cadf272f66864bba042717b44313e...BUMP_SHA
+[unreleased]: https://github.com/Thaoh/lockwright-app-mobile/compare/00ca6a1ef5fd79cab19fc35ea33d514a21e51c7d...HEAD
+[0.0.20]: https://github.com/Thaoh/lockwright-app-mobile/compare/5adbf7d9490cadf272f66864bba042717b44313e...00ca6a1ef5fd79cab19fc35ea33d514a21e51c7d
 [0.0.19]: https://github.com/Thaoh/lockwright-app-mobile/compare/ea23b521f63467ebebb11c3a1db471f11763ba37...5adbf7d9490cadf272f66864bba042717b44313e
 [0.0.18]: https://github.com/Thaoh/lockwright-app-mobile/compare/9da0527af89de74b9b5f37409c5b6fc339ac8e73...ea23b521f63467ebebb11c3a1db471f11763ba37
 [0.0.17]: https://github.com/Thaoh/lockwright-app-mobile/compare/1f2fa5c1e1a77bc55ad6b41fd6568fc1567e6c4e...9da0527af89de74b9b5f37409c5b6fc339ac8e73
