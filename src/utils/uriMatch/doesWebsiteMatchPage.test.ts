@@ -180,4 +180,21 @@ describe('recordMatchesCurrentSite', () => {
       )
     ).toBe(true)
   })
+
+  it('matches an androidapp URI to the same app page', () => {
+    expect(
+      recordMatchesCurrentSite(
+        {
+          id: 'r1',
+          data: {
+            websites: ['androidapp://com.twitter.android'],
+            uris: [
+              { uri: 'androidapp://com.twitter.android', match: 'host' }
+            ]
+          }
+        },
+        'androidapp://com.twitter.android'
+      )
+    ).toBe(true)
+  })
 })

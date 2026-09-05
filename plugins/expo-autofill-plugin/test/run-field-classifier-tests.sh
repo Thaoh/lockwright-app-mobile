@@ -55,6 +55,11 @@ java -cp "$TMP" com.pears.pass.autofill.utils.AutofillSheetLoadTest
 
 javac -d "$TMP" \
   "$ROOT/android-template/java/autofill/utils/UriMatchHelper.java" \
+  "$ROOT/test/UriMatchHelperTest.java"
+java -cp "$TMP" com.pears.pass.autofill.utils.UriMatchHelperTest
+
+javac -d "$TMP" \
+  "$ROOT/android-template/java/autofill/utils/UriMatchHelper.java" \
   "$ROOT/android-template/java/autofill/utils/PasskeyPickerPlan.java" \
   "$ROOT/test/PasskeyPickerPlanTest.java"
 java -cp "$TMP" com.pears.pass.autofill.utils.PasskeyPickerPlanTest
@@ -75,6 +80,14 @@ grep -q 'VaultStoreReady.keepWaiting' "$INIT"
 
 CLIENT="$ROOT/android-template/java/autofill/data/PearPassVaultClient.java"
 grep -q 'RecordStoreKeys.recordKeyV2' "$CLIENT"
+grep -q 'RecordStoreKeys.storedWebsites' "$CLIENT" || {
+  echo "passkey save must store trimmed URIs, not prefix https" >&2
+  exit 1
+}
+if grep -q 'formattedWebsites.add("https://" + lower)' "$CLIENT"; then
+  echo "PearPassVaultClient must not glue https onto stored websites" >&2
+  exit 1
+fi
 grep -q 'writeRecordDualStore' "$CLIENT"
 grep -q 'RecordStoreKeys.fileKeyV2' "$CLIENT"
 grep -q 'GET_VAULT_MIGRATION_STATUS(82)' "$CLIENT"
@@ -139,6 +152,21 @@ if grep -q 'maybeGenerateTotpCodes' "$COMBINED"; then
   echo "CombinedItems must not generate TOTP for the whole vault before showing the list" >&2
   exit 1
 fi
+
+grep -q 'pageUrlsForAutofill' "$COMBINED" || {
+  echo "CombinedItems must match androidapp package URIs via pageUrlsForAutofill" >&2
+  exit 1
+}
+grep -q 'credentialMatchesSearch' "$COMBINED" || {
+  echo "CombinedItems search must match website URIs, not only title and username" >&2
+  exit 1
+}
+
+SESSION="$ROOT/android-template/java/autofill/data/AutofillUnlockSession.java"
+grep -q 'pageUrlsForAutofill' "$SESSION" || {
+  echo "Unlock session chips must match androidapp package URIs via pageUrlsForAutofill" >&2
+  exit 1
+}
 
 IOS_CLIENT="$ROOT/ios-template/PearPassAutofillExtension/PearPassVaultClient.swift"
 grep -q 'includeOtpCodes' "$IOS_CLIENT" || {

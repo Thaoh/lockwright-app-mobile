@@ -5,12 +5,17 @@
  */
 export const normalizeUrl = (urlString, defaultToSecureProtocol = true) => {
   try {
+    if (typeof urlString !== 'string') return null
+    let trimmed = urlString.trim()
+    if (!trimmed) return null
+    trimmed = trimmed.replace(/^(https?:\/\/)((?:android|ios)app:\/\/)/i, '$2')
+
     const defaultProtocolPrefix = defaultToSecureProtocol
       ? 'https://'
       : 'http://'
-    const withProtocol = /^https?:\/\//i.test(urlString)
-      ? urlString
-      : `${defaultProtocolPrefix}${urlString}`
+    const withProtocol = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)
+      ? trimmed
+      : `${defaultProtocolPrefix}${trimmed}`
     const url = new URL(withProtocol)
 
     const protocol = url.protocol.toLowerCase()

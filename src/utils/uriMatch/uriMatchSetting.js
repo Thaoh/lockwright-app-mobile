@@ -1,4 +1,3 @@
-import { addHttps } from '../addHttps'
 import { URI_MATCH_TYPES } from './constants'
 import { normalizeUrl } from './normalizeUrl'
 
@@ -8,6 +7,9 @@ const VALID_MATCH_TYPES = new Set(Object.values(URI_MATCH_TYPES))
 
 /** Vault schema uses Bitwarden-style `baseDomain`; UI uses `domain`. */
 const VAULT_MATCH_BASE_DOMAIN = 'baseDomain'
+
+const storedLoginUri = (website) =>
+  website.trim().replace(/^(https?:\/\/)((?:android|ios)app:\/\/)/i, '$2')
 
 /**
  * @param {unknown} value
@@ -43,7 +45,7 @@ const normalizeWebsiteKey = (website) => {
   if (!website || typeof website !== 'string') return null
   const trimmed = website.trim()
   if (!trimmed) return null
-  return addHttps(trimmed) || null
+  return normalizeUrl(trimmed, true) || trimmed.toLowerCase()
 }
 
 /**
@@ -92,7 +94,7 @@ export const buildLoginUris = (websiteRows) => {
   for (const row of websiteRows) {
     const trimmed = typeof row?.website === 'string' ? row.website.trim() : ''
     if (!trimmed) continue
-    const uri = addHttps(trimmed)
+    const uri = storedLoginUri(trimmed)
     if (!uri) continue
     const matchType =
       row.matchType && isValidMatchType(row.matchType)
@@ -113,15 +115,17 @@ export const buildLoginUris = (websiteRows) => {
  */
 export const getRecordWebsiteValues = (record) => {
   const websites = Array.isArray(record?.data?.websites)
-    ? record.data.websites.filter(
-        (website) => typeof website === 'string' && website.trim() !== ''
-      )
+    ? record.data.websites
+        .filter(
+          (website) => typeof website === 'string' && website.trim() !== ''
+        )
+        .map(storedLoginUri)
     : []
   const fromUris = Array.isArray(record?.data?.uris)
     ? record.data.uris
         .map((entry) =>
           entry && typeof entry.uri === 'string' && entry.uri.trim() !== ''
-            ? entry.uri
+            ? storedLoginUri(entry.uri)
             : null
         )
         .filter((uri) => uri !== null)

@@ -1837,20 +1837,7 @@ public class PearPassVaultClient {
         long now = System.currentTimeMillis();
 
         // Format websites
-        List<String> formattedWebsites = new ArrayList<>();
-        if (websites != null) {
-            for (String website : websites) {
-                String trimmed = website.trim();
-                if (!trimmed.isEmpty()) {
-                    String lower = trimmed.toLowerCase();
-                    if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
-                        formattedWebsites.add("https://" + lower);
-                    } else {
-                        formattedWebsites.add(lower);
-                    }
-                }
-            }
-        }
+        List<String> formattedWebsites = RecordStoreKeys.storedWebsites(websites);
 
         // Build record data
         Map<String, Object> recordData = new HashMap<>();
@@ -1912,20 +1899,7 @@ public class PearPassVaultClient {
         long now = System.currentTimeMillis();
 
         // Format websites
-        List<String> formattedWebsites = new ArrayList<>();
-        if (websites != null) {
-            for (String website : websites) {
-                String trimmed = website.trim();
-                if (!trimmed.isEmpty()) {
-                    String lower = trimmed.toLowerCase();
-                    if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
-                        formattedWebsites.add("https://" + lower);
-                    } else {
-                        formattedWebsites.add(lower);
-                    }
-                }
-            }
-        }
+        List<String> formattedWebsites = RecordStoreKeys.storedWebsites(websites);
 
         // Get existing record data
         Map<String, Object> existingData = (Map<String, Object>) existingRecord.get("data");

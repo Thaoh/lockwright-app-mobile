@@ -71,12 +71,39 @@ public final class UriMatchHelper {
         return MATCH_DOMAIN;
     }
 
+    /**
+     * Unlock-to-fill search. Title and username miss logins named unlike
+     * the page (X vs twitter.com). URI strings are part of the query.
+     */
+    public static boolean credentialMatchesSearch(
+            String title,
+            String username,
+            List<String> websites,
+            List<UriEntry> uris,
+            String query
+    ) {
+        if (query == null || query.trim().isEmpty()) return true;
+        String q = query.toLowerCase(Locale.ROOT);
+        if (title != null && title.toLowerCase(Locale.ROOT).contains(q)) return true;
+        if (username != null && username.toLowerCase(Locale.ROOT).contains(q)) return true;
+        for (String website : getRecordWebsiteValues(websites, uris)) {
+            if (website == null) continue;
+            if (website.toLowerCase(Locale.ROOT).contains(q)) return true;
+            String normalized = normalizeUrl(website);
+            if (normalized != null && normalized.toLowerCase(Locale.ROOT).contains(q)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static String normalizeUrl(String urlString) {
         if (urlString == null) return null;
         String trimmed = urlString.trim();
         if (trimmed.isEmpty()) return null;
         try {
-            String withProtocol = trimmed.matches("(?i)^https?://.*")
+            trimmed = unwrapPrefixedAppUri(trimmed);
+            String withProtocol = trimmed.matches("(?i)^[a-z][a-z0-9+.-]*://.*")
                     ? trimmed
                     : "https://" + trimmed;
             URI uri = URI.create(withProtocol);
@@ -205,8 +232,61 @@ public final class UriMatchHelper {
     public static String pageUrlFromWebDomain(String webDomain) {
         if (webDomain == null || webDomain.trim().isEmpty()) return null;
         String trimmed = webDomain.trim();
-        if (trimmed.matches("(?i)^https?://.*")) return trimmed;
+        if (trimmed.matches("(?i)^[a-z][a-z0-9+.-]*://.*")) return trimmed;
         return "https://" + trimmed;
+    }
+
+    public static String pageUrlFromAndroidApp(String packageName) {
+        if (packageName == null) return null;
+        String trimmed = packageName.trim();
+        if (trimmed.isEmpty()) return null;
+        if (trimmed.toLowerCase(Locale.ROOT).startsWith("androidapp://")) {
+            return trimmed;
+        }
+        return "androidapp://" + trimmed;
+    }
+
+    /**
+     * Page URLs to try for an Android fill: browser domain, androidapp
+     * package URI, then the reverse-DNS https guess.
+     */
+    public static List<String> pageUrlsForAutofill(String webDomain, String packageName) {
+        List<String> out = new ArrayList<>();
+        Set<String> seen = new LinkedHashSet<>();
+        addPageUrl(out, seen, pageUrlFromWebDomain(webDomain));
+        addPageUrl(out, seen, pageUrlFromAndroidApp(packageName));
+        if (packageName != null && !packageName.trim().isEmpty()) {
+            addPageUrl(out, seen, pageUrlFromWebDomain(packageNameToDomain(packageName)));
+        }
+        return out;
+    }
+
+    public static int bestRecordSiteMatchRank(
+            List<String> websites, List<UriEntry> uris, List<String> pageUrls) {
+        int best = 0;
+        if (pageUrls == null) return 0;
+        for (String pageUrl : pageUrls) {
+            int rank = getRecordSiteMatchRank(websites, uris, pageUrl);
+            if (rank > best) best = rank;
+        }
+        return best;
+    }
+
+    private static void addPageUrl(List<String> out, Set<String> seen, String pageUrl) {
+        if (pageUrl == null || pageUrl.isEmpty()) return;
+        if (seen.add(pageUrl)) out.add(pageUrl);
+    }
+
+    private static String unwrapPrefixedAppUri(String trimmed) {
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        if (lower.startsWith("https://androidapp://")
+                || lower.startsWith("http://androidapp://")
+                || lower.startsWith("https://iosapp://")
+                || lower.startsWith("http://iosapp://")) {
+            int schemeEnd = trimmed.indexOf("://");
+            return trimmed.substring(schemeEnd + 3);
+        }
+        return trimmed;
     }
 
     /** com.twitter.android → twitter.com. Null/short names return as-is. */

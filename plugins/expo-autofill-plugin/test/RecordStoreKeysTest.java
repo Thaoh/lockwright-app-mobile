@@ -43,6 +43,15 @@ public final class RecordStoreKeysTest {
         expect("v1 has no uris", v1data.containsKey("uris"), false);
         expect("v1 websites kept", ((List<?>) v1data.get("websites")).get(0), "https://example.com");
 
+        List<String> mixed = new ArrayList<>();
+        mixed.add(" example.com ");
+        mixed.add("https://androidapp://com.twitter.android");
+        mixed.add("");
+        List<String> stored = RecordStoreKeys.storedWebsites(mixed);
+        expect("stored schemeless host", stored.get(0), "example.com");
+        expect("stored androidapp URI", stored.get(1), "androidapp://com.twitter.android");
+        expect("stored size", stored.size(), 2);
+
         if (failures > 0) {
             System.err.println(failures + " RecordStoreKeys checks failed");
             System.exit(1);

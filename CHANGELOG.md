@@ -9,6 +9,11 @@ Starts at 0.0.17, after the Lockwright package rename. Earlier history is git.
 
 ## [Unreleased]
 
+### Fixed
+
+- Login URIs store as typed. Edit unwraps glued `https://androidapp://` so Save writes the app URI.
+- Unlock-to-fill matches `androidapp://` package URIs and searches website fields.
+
 ## [0.0.20] - 2026-09-05
 
 `00ca6a1ef5fd79cab19fc35ea33d514a21e51c7d`

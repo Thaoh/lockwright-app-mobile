@@ -523,7 +523,7 @@ public class PasskeyRegistrationActivity extends AppCompatActivity implements Na
         data.put("title", payload.getTitle() != null ? payload.getTitle() : payload.getRpName());
         data.put("username", payload.getUserName());
         data.put("password", "");
-        data.put("websites", payload.getWebsites() != null ? payload.getWebsites() : Arrays.asList("https://" + payload.getRpId()));
+        data.put("websites", payload.getWebsites() != null ? payload.getWebsites() : Arrays.asList(payload.getRpId()));
 
         // Mark as having a passkey credential
         Map<String, Object> credentialMap = new HashMap<>();
@@ -549,7 +549,7 @@ public class PasskeyRegistrationActivity extends AppCompatActivity implements Na
         data.put("title", payload.getRpName());
         data.put("username", payload.getUserName());
         data.put("password", "");
-        data.put("websites", Arrays.asList("https://" + payload.getRpId()));
+        data.put("websites", Arrays.asList(payload.getRpId()));
 
         Map<String, Object> credentialMap = new HashMap<>();
         credentialMap.put("id", payload.getCredentialId());

@@ -25,4 +25,20 @@ describe('addHttps', () => {
     const url = 'example.com/path'
     expect(addHttps(url)).toBe('https://example.com/path')
   })
+
+  test('keeps androidapp URIs instead of prefixing https', () => {
+    expect(addHttps('androidapp://com.twitter.android')).toBe(
+      'androidapp://com.twitter.android'
+    )
+  })
+
+  test('unwraps an https prefix glued onto an androidapp URI', () => {
+    expect(addHttps('https://androidapp://com.twitter.android')).toBe(
+      'androidapp://com.twitter.android'
+    )
+  })
+
+  test('still prefixes a host with a port and no scheme', () => {
+    expect(addHttps('example.com:8080')).toBe('https://example.com:8080')
+  })
 })

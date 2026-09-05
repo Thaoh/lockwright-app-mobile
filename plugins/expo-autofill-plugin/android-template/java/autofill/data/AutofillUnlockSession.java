@@ -77,24 +77,14 @@ public final class AutofillUnlockSession {
             expireLocked();
             if (unlockedUntilMs <= 0) return Collections.emptyList();
 
-            String pageUrl = UriMatchHelper.pageUrlFromWebDomain(webDomain);
-            String pkgPageUrl = packageName != null
-                    ? UriMatchHelper.pageUrlFromWebDomain(UriMatchHelper.packageNameToDomain(packageName))
-                    : null;
+            List<String> pageUrls = UriMatchHelper.pageUrlsForAutofill(webDomain, packageName);
 
             List<CredentialItem> matches = new ArrayList<>();
             List<Integer> ranks = new ArrayList<>();
             for (CredentialItem item : credentials) {
                 if (item == null || item.isCreditCard() || item.isIdentity()) continue;
-                int rank = 0;
-                if (pageUrl != null) {
-                    rank = Math.max(rank, UriMatchHelper.getRecordSiteMatchRank(
-                            item.getWebsites(), item.getUris(), pageUrl));
-                }
-                if (rank == 0 && pkgPageUrl != null) {
-                    rank = UriMatchHelper.getRecordSiteMatchRank(
-                            item.getWebsites(), item.getUris(), pkgPageUrl);
-                }
+                int rank = UriMatchHelper.bestRecordSiteMatchRank(
+                        item.getWebsites(), item.getUris(), pageUrls);
                 if (rank > 0) {
                     matches.add(item);
                     ranks.add(rank);

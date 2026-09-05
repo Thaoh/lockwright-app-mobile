@@ -28,7 +28,6 @@ import { BackScreenHeader } from '../../containers/ScreenHeader/BackScreenHeader
 import { Layout } from '../../containers/Layout'
 import { useLoadingContext } from '../../context/LoadingContext'
 import { useGetMultipleFiles } from '../../hooks/useGetMultipleFiles'
-import { addHttps } from '../../utils/addHttps'
 import { convertBase64FilesToUint8 } from '../../utils/convertBase64FilesToUint8'
 import { getRecordAttachments } from '../../utils/getRecordAttachments'
 import { formatPasskeyDate } from '../../utils/formatPasskeyDate'
@@ -156,7 +155,7 @@ export const CreateOrEditLoginContent = ({
     note: Validator.string(),
     websites: Validator.array().items(
       Validator.object({
-        website: Validator.string().website('Wrong format of website'),
+        website: Validator.string(),
         matchType: Validator.string()
       })
     ),
@@ -224,8 +223,8 @@ export const CreateOrEditLoginContent = ({
       }))
       .filter((item) => item.website.length > 0)
 
-    const websites = websiteRows.map((item) => addHttps(item.website))
     const uris = buildLoginUris(websiteRows)
+    const websites = uris.map((entry) => entry.uri)
 
     const data = {
       type: RECORD_TYPES.LOGIN,

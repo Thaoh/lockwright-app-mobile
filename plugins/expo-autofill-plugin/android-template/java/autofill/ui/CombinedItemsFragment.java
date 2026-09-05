@@ -505,10 +505,13 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
         List<CredentialItem> out;
         if (!query.isEmpty()) {
             out = new ArrayList<>();
-            String q = query.toLowerCase(Locale.ROOT);
             for (CredentialItem c : allCredentials) {
-                if (c.getTitle().toLowerCase(Locale.ROOT).contains(q) ||
-                    (c.getUsername() != null && c.getUsername().toLowerCase(Locale.ROOT).contains(q))) {
+                if (UriMatchHelper.credentialMatchesSearch(
+                        c.getTitle(),
+                        c.getUsername(),
+                        c.getWebsites(),
+                        c.getUris(),
+                        query)) {
                     out.add(c);
                 }
             }
@@ -572,33 +575,19 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
         // Autofill: URI match types + specificity rank (extension parity)
         if (webDomain != null || packageName != null) {
             List<CredentialItem> matches = new ArrayList<>();
-            String pageUrl = UriMatchHelper.pageUrlFromWebDomain(webDomain);
-            String pkgPageUrl = packageName != null
-                    ? UriMatchHelper.pageUrlFromWebDomain(UriMatchHelper.packageNameToDomain(packageName))
-                    : null;
+            List<String> pageUrls = UriMatchHelper.pageUrlsForAutofill(webDomain, packageName);
             for (CredentialItem c : all) {
-                int rank = 0;
-                if (pageUrl != null) {
-                    rank = Math.max(rank, UriMatchHelper.getRecordSiteMatchRank(
-                            c.getWebsites(), c.getUris(), pageUrl));
-                }
-                if (rank == 0 && pkgPageUrl != null) {
-                    rank = UriMatchHelper.getRecordSiteMatchRank(
-                            c.getWebsites(), c.getUris(), pkgPageUrl);
-                }
+                int rank = UriMatchHelper.bestRecordSiteMatchRank(
+                        c.getWebsites(), c.getUris(), pageUrls);
                 if (rank > 0) {
                     matches.add(c);
                 }
             }
             matches.sort((a, b) -> {
-                int rb = Math.max(
-                        pageUrl != null ? UriMatchHelper.getRecordSiteMatchRank(b.getWebsites(), b.getUris(), pageUrl) : 0,
-                        pkgPageUrl != null ? UriMatchHelper.getRecordSiteMatchRank(b.getWebsites(), b.getUris(), pkgPageUrl) : 0
-                );
-                int ra = Math.max(
-                        pageUrl != null ? UriMatchHelper.getRecordSiteMatchRank(a.getWebsites(), a.getUris(), pageUrl) : 0,
-                        pkgPageUrl != null ? UriMatchHelper.getRecordSiteMatchRank(a.getWebsites(), a.getUris(), pkgPageUrl) : 0
-                );
+                int rb = UriMatchHelper.bestRecordSiteMatchRank(
+                        b.getWebsites(), b.getUris(), pageUrls);
+                int ra = UriMatchHelper.bestRecordSiteMatchRank(
+                        a.getWebsites(), a.getUris(), pageUrls);
                 return Integer.compare(rb, ra);
             });
             return matches.isEmpty() ? new ArrayList<>(all) : matches;
@@ -911,7 +900,7 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
                         List<String> websites = payload.getWebsites();
                         if (websites == null || websites.isEmpty()) {
                             websites = new ArrayList<>();
-                            websites.add("https://" + payload.getRpId());
+                            websites.add(payload.getRpId());
                         }
 
                         String title = payload.getTitle() != null ? payload.getTitle() : payload.getRpName();
@@ -935,7 +924,7 @@ public class CombinedItemsFragment extends BaseAutofillFragment {
                         String title = payload.getRpName();
                         String username = payload.getUserName();
                         List<String> websites = new ArrayList<>();
-                        websites.add("https://" + payload.getRpId());
+                        websites.add(payload.getRpId());
 
                         for (CredentialItem existing : existingCredentials) {
                             if (existing.getId().equals(payload.getExistingRecordId())) {

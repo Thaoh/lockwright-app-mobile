@@ -257,7 +257,7 @@ public class PasskeyFormFragment extends Fragment {
         } else {
             titleInput.setText(activity.getRpName());
             usernameInput.setText(activity.getUserName());
-            initialWebsites.add("https://" + activity.getRpId());
+            initialWebsites.add(activity.getRpId());
         }
 
         if (initialWebsites.isEmpty()) {
@@ -499,20 +499,6 @@ public class PasskeyFormFragment extends Fragment {
             isValid = false;
         }
 
-        for (EditText e : websiteInputs) {
-            String entry = e.getText().toString().trim();
-            if (entry.isEmpty()) continue;
-            String urlString = addHttps(entry);
-            if (!urlString.contains(".")) {
-                if (websiteError != null) {
-                    websiteError.setText("Wrong format of website");
-                    websiteError.setVisibility(View.VISIBLE);
-                }
-                isValid = false;
-                break;
-            }
-        }
-
         return isValid;
     }
 
@@ -535,7 +521,7 @@ public class PasskeyFormFragment extends Fragment {
         List<String> websites = new ArrayList<>();
         for (EditText e : websiteInputs) {
             String w = e.getText().toString().trim();
-            if (!w.isEmpty()) websites.add(addHttps(w));
+            if (!w.isEmpty()) websites.add(w);
         }
 
         String existingRecordId = null;
@@ -560,14 +546,6 @@ public class PasskeyFormFragment extends Fragment {
         if (getActivity() instanceof PasskeyRegistrationActivity) {
             ((PasskeyRegistrationActivity) getActivity()).onFormSave(formData);
         }
-    }
-
-    private String addHttps(String urlString) {
-        String lower = urlString.toLowerCase();
-        if (lower.startsWith("http://") || lower.startsWith("https://")) {
-            return lower;
-        }
-        return "https://" + lower;
     }
 
     /**

@@ -34,6 +34,19 @@ public final class RecordStoreKeys {
         return RECORD_V2_PREFIX + recordId + "/file/" + fileId;
     }
 
+    public static List<String> storedWebsites(List<String> websites) {
+        List<String> out = new ArrayList<>();
+        if (websites == null) return out;
+        for (String website : websites) {
+            if (website == null) continue;
+            String trimmed = website.trim().replaceAll(
+                    "(?i)^(https?://)((?:android|ios)app://)",
+                    "$2");
+            if (!trimmed.isEmpty()) out.add(trimmed);
+        }
+        return out;
+    }
+
     public static List<Map<String, String>> deriveUrisFromWebsites(
             List<String> websites, List<Map<String, String>> existingUris) {
         List<String> list = websites != null ? websites : new ArrayList<>();

@@ -750,16 +750,9 @@ struct HostView: View {
             return
         }
 
-        // Validate website entries — first malformed one blocks save.
+        // Website URI shape is not a save gate. Match/open parse at use time.
         formWebsiteError = nil
         let trimmedWebsites = formWebsites.map { $0.trimmingCharacters(in: .whitespaces) }
-        for entry in trimmedWebsites where !entry.isEmpty {
-            let candidate = addHttps(entry)
-            guard let host = URL(string: candidate)?.host, host.contains(".") else {
-                formWebsiteError = NSLocalizedString("Wrong format of website", comment: "website validation error")
-                return
-            }
-        }
 
         isSavingPasskey = true
         formSaveError = nil
@@ -774,10 +767,10 @@ struct HostView: View {
                     throw PasskeyJobError.noHashedPassword
                 }
 
-                // 3. Build form data — drop empty rows, normalize via addHttps.
+        // 3. Build form data — drop empty rows, store URI as typed.
                 let websites = trimmedWebsites
                     .filter { !$0.isEmpty }
-                    .map { self.addHttps($0) }
+                    .map { storedLoginUri($0) }
                 let formData = PasskeyFormData(
                     title: formTitleText,
                     username: formUsername,
@@ -1310,13 +1303,18 @@ struct HostView: View {
         return s
     }
 
-    /// Lowercases + prepends `https://` when no scheme is present.
-    private func addHttps(_ urlString: String) -> String {
+    /// Undo https glued onto androidapp/iosapp URIs. Store as typed otherwise.
+    private func storedLoginUri(_ urlString: String) -> String {
         let lower = urlString.lowercased()
-        if lower.hasPrefix("http://") || lower.hasPrefix("https://") {
-            return lower
+        if lower.hasPrefix("https://androidapp://")
+            || lower.hasPrefix("http://androidapp://")
+            || lower.hasPrefix("https://iosapp://")
+            || lower.hasPrefix("http://iosapp://") {
+            if let range = urlString.range(of: "://") {
+                return String(urlString[range.upperBound...])
+            }
         }
-        return "https://\(lower)"
+        return urlString
     }
 
     /// Most-recently-created first, so `.first` = last-added vault default.
