@@ -13,6 +13,10 @@ Starts at 0.0.17, after the Lockwright package rename. Earlier history is git.
 
 `0a5877bb714a8cae30fd19966cf6808e92c8b067`
 
+### Changed
+
+- Play versionCode 11.
+
 ### Fixed
 
 - Login URIs store as typed. Edit unwraps glued `https://androidapp://` so Save writes the app URI.
